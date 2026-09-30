@@ -1,0 +1,16 @@
+name = "omarcoaraujo/scrim_cli"
+version = "0.1.0"
+description = "Runner for scrim: builds the place, launches Studio and reports the result"
+license = "MIT"
+authors = ["omarcoaraujo <omarcoaraujo@outlook.com>"]
+includes = ["pesde.toml", "lib/**/*", "main.luau"]
+
+[target]
+environment = "luau"
+bin = "main.luau"
+
+[indices]
+default = "https://github.com/pesde-pkg/index"
+
+[dependencies]
+tint = { name = "omarcoaraujo/tint", version = "^0.1.1" }

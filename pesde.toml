@@ -1,0 +1,14 @@
+name = "omarcoaraujo/scrim"
+version = "0.1.0"
+description = "Integration testing for Roblox games, driven by bots"
+license = "MIT"
+authors = ["omarcoaraujo <omarcoaraujo@outlook.com>"]
+includes = ["pesde.toml", "README.md", "LICENSE", "src/**/*"]
+
+[target]
+environment = "roblox"
+lib = "src/init.luau"
+build_files = ["src"]
+
+[indices]
+default = "https://github.com/pesde-pkg/index"

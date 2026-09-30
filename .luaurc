@@ -1,0 +1,9 @@
+{
+  "languageMode": "strict",
+  "aliases": {
+    "cli": "./cli/lib",
+    "lune": "~/.lune/.typedefs/0.10.5/",
+    "pkg": "./cli/luau_packages",
+    "src": "./src"
+  }
+}
