@@ -57,10 +57,10 @@ const function run_spec(loaded: loaded): (boolean, string?)
 	return true, nil
 end
 
-const function report(passed: number, skipped: number, failures: { failure })
+const function report(passes: { string }, failures: { failure })
 	print(
 		RESULT_PREFIX
-			.. HttpService:JSONEncode { passed = passed, failed = #failures, skipped = skipped, failures = failures }
+			.. HttpService:JSONEncode { passed = #passes, failed = #failures, passes = passes, failures = failures }
 	)
 end
 
@@ -69,43 +69,47 @@ const function finish(failed: boolean)
 	service:EndTest(not failed)
 end
 
-const function run(options: options)
-	const specs = load(options.specs)
+const function select(specs: { loaded }, group: number?): { loaded }
+	if not group then return specs end
+	const selected = {} :: { loaded }
 
+	for _, loaded in specs do
+		if (loaded.spec.players or 1) ~= group then continue end
+		table.insert(selected, loaded)
+	end
+
+	return selected
+end
+
+const function run(options: options)
+	const specs = select(load(options.specs), options.players)
 	local needed = 0
+
 	for _, loaded in specs do
 		needed = math.max(needed, loaded.spec.players or 1)
 	end
 
-	const available = options.players or needed
-	const ready, err = pcall(wait_players :: (number) -> any, available)
-
+	const ready, err = pcall(wait_players :: (number) -> any, options.players or needed)
 	if not ready then
 		print(ERROR_PREFIX .. tostring(err))
 		finish(true)
 		return
 	end
 
-	local passed = 0
-	local skipped = 0
+	const passes = {} :: { string }
 	const failures = {} :: { failure }
 
 	for _, loaded in specs do
-		if (loaded.spec.players or 1) > available then
-			skipped += 1
-			continue
-		end
-
 		const ok, message = run_spec(loaded)
 
 		if ok then
-			passed += 1
+			table.insert(passes, loaded.name)
 		else
 			table.insert(failures, { name = loaded.name, message = message or "failed" })
 		end
 	end
 
-	report(passed, skipped, failures)
+	report(passes, failures)
 	finish(#failures > 0)
 end
 

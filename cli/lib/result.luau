@@ -3,7 +3,7 @@ type status = "passed" | "failed" | "error" | "missing"
 type decode = (string) -> any
 
 export type failure = { name: string, message: string }
-export type summary = { passed: number, failed: number, skipped: number, failures: { failure } }
+export type summary = { passed: number, failed: number, passes: { string }, failures: { failure } }
 export type outcome = { status: status, summary: summary?, message: string? }
 
 --// Constants
@@ -32,8 +32,7 @@ local function parse(log: string, decode: decode): outcome
 	local summary = {
 		passed = value.passed or 0,
 		failed = value.failed or 0,
-
-		skipped = value.skipped or 0,
+		passes = value.passes or {},
 		failures = value.failures or {},
 	}
 
@@ -43,6 +42,29 @@ local function parse(log: string, decode: decode): outcome
 	}
 end
 
+local function combine(outcomes: { outcome }): outcome
+	local summary = { passed = 0, failed = 0, passes = {}, failures = {} } :: summary
+	local messages = {} :: { string }
+
+	for _, outcome in outcomes do
+		if outcome.summary then
+			summary.passed += outcome.summary.passed
+			summary.failed += outcome.summary.failed
+			table.move(outcome.summary.passes, 1, #outcome.summary.passes, #summary.passes + 1, summary.passes)
+			table.move(outcome.summary.failures, 1, #outcome.summary.failures, #summary.failures + 1, summary.failures)
+		end
+
+		if outcome.status == "error" or outcome.status == "missing" then
+			table.insert(messages, outcome.message or outcome.status)
+		end
+	end
+
+	if #outcomes == 0 then return { status = "missing", message = "no session ran" } end
+	if #messages > 0 then return { status = "error", summary = summary, message = table.concat(messages, "; ") } end
+
+	return { status = if summary.failed == 0 then "passed" else "failed", summary = summary }
+end
+
 local function exit_code(outcome: outcome)
 	return if outcome.status == "passed" then 0 else 1
 end
@@ -50,5 +72,6 @@ end
 --// End
 return table.freeze {
 	parse = parse,
+	combine = combine,
 	exit_code = exit_code,
 }
