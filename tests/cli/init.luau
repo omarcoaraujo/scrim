@@ -1,5 +1,6 @@
 local tint = require "@pkg/tint"
 local suites = {
+	args = require "@self/args",
 	result = require "@self/result",
 } :: { [string]: { [string]: any } }
 
