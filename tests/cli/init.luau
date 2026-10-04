@@ -5,6 +5,7 @@ local suites = {
 	cloud = require "@self/cloud",
 	merge = require "@self/merge",
 	specs = require "@self/specs",
+	studio = require "@self/studio",
 	report = require "@self/report",
 	result = require "@self/result",
 } :: { [string]: { [string]: any } }
