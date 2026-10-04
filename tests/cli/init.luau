@@ -1,6 +1,7 @@
 local tint = require "@pkg/tint"
 local suites = {
 	args = require "@self/args",
+	boot = require "@self/boot",
 	cloud = require "@self/cloud",
 	merge = require "@self/merge",
 	specs = require "@self/specs",
