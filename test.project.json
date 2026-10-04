@@ -1,0 +1,10 @@
+{
+  "name": "scrim_tests",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "scrim": { "$path": "src" },
+      "tests": { "$path": "tests/lib" }
+    }
+  }
+}
