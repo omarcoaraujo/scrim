@@ -106,6 +106,8 @@ The CLI reads each spec's `players`, groups the specs by player count and opens 
 stylua src cli tests                                     # format
 luau-lsp analyze --sourcemap=sourcemap.json src cli     # type-check
 lune run tests/cli                                       # CLI specs
+rojo build test.project.json --output build/tests.rbxl   # lib specs, build...
+run-in-roblox --place build/tests.rbxl --script tests/lib/run.server.luau   # ...and run (needs Studio)
 ```
 
 ## License
