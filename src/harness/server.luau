@@ -1,19 +1,17 @@
 --// Services
-const HttpService = game:GetService "HttpService"
 const Players = game:GetService "Players"
 
 --// Modules
 const context = require "./context"
 
 --// Constants
-const RESULT_PREFIX = "[scrim:result] "
-const ERROR_PREFIX = "[scrim:error] "
 const PLAYERS_TIMEOUT = 60
 
 --// Types
 export type spec = { name: string?, players: number?, run: (ctx: context.context) -> () }
 export type options = { specs: Instance, players: number? }
 
+type test_args = { players: number?, only: { string }? }
 type failure = { name: string, message: string }
 type loaded = { name: string, spec: spec }
 
@@ -57,24 +55,29 @@ const function run_spec(loaded: loaded): (boolean, string?)
 	return true, nil
 end
 
-const function report(passes: { string }, failures: { failure })
-	print(
-		RESULT_PREFIX
-			.. HttpService:JSONEncode { passed = #passes, failed = #failures, passes = passes, failures = failures }
-	)
+const function finish(result: { [string]: any })
+	game:GetService("StudioTestService"):EndTest(result)
 end
 
-const function finish(failed: boolean)
-	const service = game:GetService "StudioTestService"
-	service:EndTest(not failed)
+const function test_args(): test_args
+	return game:GetService("StudioTestService"):GetTestArgs() or {}
 end
 
-const function select(specs: { loaded }, group: number?): { loaded }
-	if not group then return specs end
+const function select(specs: { loaded }, group: number?, only: { string }?): { loaded }
+	const names = {} :: { [string]: true }
+
+	if only then
+		for _, name in only do
+			names[name] = true
+		end
+	end
+
 	const selected = {} :: { loaded }
 
 	for _, loaded in specs do
-		if (loaded.spec.players or 1) ~= group then continue end
+		if group and (loaded.spec.players or 1) ~= group then continue end
+		if only and not names[loaded.name] then continue end
+
 		table.insert(selected, loaded)
 	end
 
@@ -82,17 +85,18 @@ const function select(specs: { loaded }, group: number?): { loaded }
 end
 
 const function run(options: options)
-	const specs = select(load(options.specs), options.players)
+	const args = test_args()
+	const group = options.players or args.players
+	const specs = select(load(options.specs), group, args.only)
 	local needed = 0
 
 	for _, loaded in specs do
 		needed = math.max(needed, loaded.spec.players or 1)
 	end
 
-	const ready, err = pcall(wait_players :: (number) -> any, options.players or needed)
+	const ready, err = pcall(wait_players :: (number) -> any, group or needed)
 	if not ready then
-		print(ERROR_PREFIX .. tostring(err))
-		finish(true)
+		finish { error = tostring(err) }
 		return
 	end
 
@@ -109,8 +113,7 @@ const function run(options: options)
 		end
 	end
 
-	report(passes, failures)
-	finish(#failures > 0)
+	finish { passed = #passes, failed = #failures, passes = passes, failures = failures }
 end
 
 --// End
