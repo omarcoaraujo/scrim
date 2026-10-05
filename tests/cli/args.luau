@@ -11,6 +11,7 @@ function spec.should_use_defaults_without_flags()
 
 	assert(options.runner == "studio")
 	assert(options.verbose == false)
+	assert(options.show == false)
 	assert(options.place == nil and options.filter == nil)
 end
 
@@ -65,6 +66,14 @@ end
 function spec.should_reject_a_positional_argument()
 	local options, err = args.parse { "playtests" }
 	assert(not options and err == 'unexpected argument "playtests"')
+end
+
+function spec.should_read_the_show_flag()
+	local options = args.parse { "--show" }
+	assert(options and options.show == true)
+
+	local _, err = args.parse { "--show=1" }
+	assert(err == "--show takes no value")
 end
 
 return spec

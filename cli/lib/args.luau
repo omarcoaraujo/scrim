@@ -8,6 +8,7 @@ export type options = {
 	runner: runner,
 	filter: string?,
 	verbose: boolean,
+	show: boolean,
 }
 
 --// Constants
@@ -25,7 +26,13 @@ local function split(argument: string): (string?, string?)
 end
 
 local function parse(argv: { string }): (options?, string?)
-	local options = { specs = DEFAULT_SPECS, project = DEFAULT_PROJECT, runner = "studio", verbose = false } :: options
+	local options = {
+		specs = DEFAULT_SPECS,
+		project = DEFAULT_PROJECT,
+		runner = "studio",
+		verbose = false,
+		show = false,
+	} :: options
 	local values = {} :: { [string]: string }
 	local index = 1
 
@@ -36,6 +43,9 @@ local function parse(argv: { string }): (options?, string?)
 		if name == "verbose" then
 			if inline then return nil, "--verbose takes no value" end
 			options.verbose = true
+		elseif name == "show" then
+			if inline then return nil, "--show takes no value" end
+			options.show = true
 		elseif VALUE_FLAGS[name] then
 			local value = inline
 			if not value then

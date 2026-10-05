@@ -1,5 +1,5 @@
 name = "omarcoaraujo/scrim_cli"
-version = "0.1.0"
+version = "0.1.1"
 description = "Runner for scrim: builds the place, launches Studio and reports the result"
 license = "MIT"
 private = true

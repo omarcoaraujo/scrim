@@ -78,7 +78,12 @@ local function studio_runner(group: specs.group, options: args.options): string
 	fs.writeFile(`{DIRECTORY}/boot.luau`, boot.render(group.players, names))
 	if fs.isFile(output) then fs.removeFile(output) end
 
-	local launch_err = studio.launch(`{DIRECTORY}/place.rbxl`, `{DIRECTORY}/boot.luau`, output)
+	local launch_err = studio.launch(
+		`{DIRECTORY}/place.rbxl`,
+		`{DIRECTORY}/boot.luau`,
+		output,
+		if options.show then nil else `{DIRECTORY}/minimize.ps1`
+	)
 	if launch_err then return failure(launch_err) end
 
 	if not fs.isFile(output) then return failure "Studio exited without an output file" end
