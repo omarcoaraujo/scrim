@@ -1,38 +1,52 @@
-# scrim
+# Scrim
 
 Integration testing for Roblox games, driven by bots.
 
-A spec runs inside a real multiplayer Studio session. The server drives the test and asks each client to act through named queries. The server decides pass or fail, so a client is never trusted to report its own result.
+[![Check](https://github.com/omarcoaraujo/scrim/actions/workflows/check.yml/badge.svg)](https://github.com/omarcoaraujo/scrim/actions/workflows/check.yml) [![Release](https://github.com/omarcoaraujo/scrim/actions/workflows/release.yml/badge.svg)](https://github.com/omarcoaraujo/scrim/actions/workflows/release.yml)
 
-- `src/` is the library, installed in your game (target `roblox`).
-- `cli/` is a Lune CLI that builds the place, launches Studio, reads the log and sets the exit code.
+---
 
-## Install
+## Features
 
-The library comes from pesde:
+- Specs run inside a real multiplayer Studio session, with real replication
+- The server drives the test and asks each client to act through named queries
+- The server decides pass or fail, a client is never trusted to report its own result
+- A spec fails by erroring, and `defer` cleanups run in reverse order even then
+- CLI that builds the place, launches Studio, reads the log and sets the exit code
+- Specs are grouped by player count, one Studio session per group
 
-```sh
-pesde add omarcoaraujo/scrim
-pesde install
+## Installation
+
+The library comes from pesde. Add it to your `pesde.toml`:
+
+```toml
+[dependencies]
+scrim = { name = "omarcoaraujo/scrim", version = "^0.1.0" }
 ```
 
-The CLI needs [Lune](https://github.com/lune-org/lune), [Rojo](https://github.com/rojo-rbx/rojo) and Roblox Studio. Tools are pinned in `rokit.toml`.
+The CLI comes from the [releases](https://github.com/omarcoaraujo/scrim/releases). With [Rokit](https://github.com/rojo-rbx/rokit):
 
-## Writing a spec
+```sh
+rokit add omarcoaraujo/scrim
+```
 
-A spec is a folder with two files.
+It also needs [Rojo](https://github.com/rojo-rbx/rojo) and Roblox Studio.
 
-`playtests/walk/server.luau` decides what happens:
+## Usage
 
-```luau
+### Writing a spec
+
+A spec is a folder with two files. `playtests/walk/server.luau` decides what happens:
+
+```lua
 return {
 	name = "walk",
 	players = 1,
 	run = function(ctx)
 		const player = ctx.players[1]
 
-		ctx.ask(player, "walk_to", Vector3.new(0, 0, 50))
-		ctx.eventually("player reaches the goal", function()
+		ctx.ask(player, "walk_to", Vector3.new(0, 3, 50))
+		ctx.eventually("the player reaches the goal", function()
 			return player.Character.PrimaryPart.Position.Z > 45
 		end)
 	end,
@@ -41,7 +55,7 @@ return {
 
 `playtests/walk/client.luau` returns the queries the server can ask:
 
-```luau
+```lua
 return {
 	walk_to = function(position: Vector3)
 		-- move the local character
@@ -49,7 +63,9 @@ return {
 }
 ```
 
-The context offers:
+`players` defaults to 1.
+
+### Context
 
 | Call | What it does |
 |---|---|
@@ -59,56 +75,49 @@ The context offers:
 | `ctx.defer(cleanup)` | Registers a cleanup, run in reverse order even when the spec fails |
 | `ctx.finish()` | Ends the spec early as a pass |
 
-A spec fails by erroring. `players` defaults to 1.
+### Wiring it in the game
 
-## Wiring it in the game
+A server script runs the specs:
 
-A server script runs the specs, and a client script registers the queries by spec name:
-
-```luau
--- server
+```lua
 const scrim = require(path.to.scrim)
+
 scrim.run { specs = path.to.playtests }
 ```
 
-```luau
--- client
+A client script registers the queries by spec name:
+
+```lua
 const scrim = require(path.to.scrim)
+
 scrim.start {
 	walk = require(path.to.playtests.walk.client),
 }
 ```
 
-The project must expose the specs and these scripts through a Rojo `default.project.json` at the root.
+Expose the specs and both scripts through a Rojo `default.project.json` at the root. A complete project is in [`example/`](example).
 
-## Running
+### Running
 
 ```sh
-export ROBLOX_API_KEY=...   # scope legacy-asset:manage, only needed when --place is an id
-lune run cli/main --place world.rbxl
+scrim --place world.rbxl
 ```
-
-Flags, no config file:
 
 | Flag | Meaning |
 |---|---|
-| `--specs <dir>` | Folder with the specs, `./playtests` by default; it must exist |
-| `--place <file or id>` | The world place. A file is used as is; an id is downloaded through Open Cloud |
-| `--runner studio\|cloud` | `studio` by default. `cloud` is not implemented yet |
+| `--specs <dir>` | Folder with the specs, `./playtests` by default |
+| `--place <file or id>` | The world place. A file is used as is, an id is downloaded through Open Cloud |
+| `--runner studio` | Where the session runs. `cloud` is not implemented yet |
 | `--filter <text>` | Runs only the specs whose name contains the text |
 | `--verbose` | Also prints the raw Studio log |
 
-The CLI reads each spec's `players`, groups the specs by player count and opens one Studio session per group, from the largest group to the smallest. It exits 0 only when every spec passed.
+Downloading a place by id needs `ROBLOX_API_KEY` with the `legacy-asset:manage` scope.
 
-## Development
+The CLI exits 0 only when every spec passed. A missing, unreadable or errored result counts as a failure.
 
-```sh
-stylua src cli tests                                     # format
-luau-lsp analyze --sourcemap=sourcemap.json src cli     # type-check
-lune run tests/cli                                       # CLI specs
-rojo build test.project.json --output build/tests.rbxl   # lib specs, build...
-run-in-roblox --place build/tests.rbxl --script tests/lib/run.server.luau   # ...and run (needs Studio)
-```
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
