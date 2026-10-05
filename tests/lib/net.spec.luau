@@ -23,6 +23,11 @@ function spec.should_create_the_remote_on_the_server()
 	connection:disconnect()
 end
 
+function spec.should_create_every_remote_when_the_definition_is_built()
+	net.remotes({ idle = net.event<<()>>() }, "lib_eager")
+	assert(ReplicatedStorage:FindFirstChild("SCRIM_REMOTES"):FindFirstChild "lib_eager.idle")
+end
+
 function spec.should_reject_client_only_calls_on_the_server()
 	const remotes = net.remotes({ ping = net.event<<(number)>>() }, "lib_side")
 
@@ -44,7 +49,6 @@ end
 function spec.should_prefix_nested_events_with_the_namespace()
 	const remotes = net.remotes({ group = { inner = net.event<<()>>() } }, "lib_nested")
 	remotes.group.inner.fire_all()
-
 	assert(ReplicatedStorage:FindFirstChild("SCRIM_REMOTES"):FindFirstChild "lib_nested.group.inner")
 end
 

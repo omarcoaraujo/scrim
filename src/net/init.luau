@@ -74,6 +74,8 @@ const function build_event(path: string): event<...any>
 		return cached :: RemoteEvent
 	end
 
+	if is_server then remote() end
+
 	const function server_only(what: string)
 		assert(is_server, `scrim net: {path}.{what} is server-only`)
 	end
