@@ -1,0 +1,6 @@
+{
+  "bundle": {
+    "require_mode": { "name": "luau" },
+    "excludes": ["@lune/**"]
+  }
+}

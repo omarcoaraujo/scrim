@@ -1,0 +1,88 @@
+name: Release
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+jobs:
+  check:
+    uses: ./.github/workflows/check.yml
+    secrets: inherit
+
+  publish:
+    name: Publish the library
+    runs-on: ubuntu-latest
+    needs: [check]
+    if: github.event_name == 'release'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pesde
+        uses: axiom-co/setup-pesde@b690699ace34169731b6b2a1c93b2008472038a7
+        with:
+          token: ${{ github.token }}
+
+      - name: Log in to pesde
+        run: pesde auth login --token "$PESDE_AUTH"
+        env:
+          PESDE_AUTH: ${{ secrets.PESDE_AUTH }}
+
+      - name: Publish
+        run: pesde publish -y
+
+  build:
+    name: Build the CLI (${{ matrix.name }})
+    needs: [check]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, name: windows-x86_64, executable: scrim.exe }
+          - { os: ubuntu-latest, name: linux-x86_64, executable: scrim }
+          - { os: macos-15-intel, name: macos-x86_64, executable: scrim }
+          - { os: macos-latest, name: macos-aarch64, executable: scrim }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install pesde
+        uses: axiom-co/setup-pesde@b690699ace34169731b6b2a1c93b2008472038a7
+        with:
+          token: ${{ github.token }}
+
+      - name: Install CLI packages
+        working-directory: cli
+        run: pesde install
+
+      - name: Bundle the CLI
+        run: darklua process --config darklua.json cli/main.luau build/scrim.luau
+
+      - name: Build the executable
+        run: lune build build/scrim.luau --output build/${{ matrix.executable }}
+
+      - name: Package
+        run: tar -czf "scrim-${{ github.event.release.tag_name || 'dev' }}-${{ matrix.name }}.tar.gz" -C build ${{ matrix.executable }}
+
+      - name: Upload to the release
+        if: github.event_name == 'release'
+        run: gh release upload "${{ github.event.release.tag_name }}" scrim-*.tar.gz --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Keep as an artifact
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrim-${{ matrix.name }}
+          path: scrim-*.tar.gz
