@@ -116,6 +116,12 @@ Downloading a place by id needs `ROBLOX_API_KEY` with the `legacy-asset:manage` 
 
 The CLI exits 0 only when every spec passed. A missing, unreadable or errored result counts as a failure.
 
+## Limitations
+
+- Scrim is pre-1.0, so the API can still change between minor versions.
+- Sessions run in Roblox Studio on your machine, which needs to be installed. `--runner cloud` is reserved and not implemented.
+- To run it in CI you need a runner with Studio installed, such as a self-hosted one.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
