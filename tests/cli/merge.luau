@@ -36,4 +36,27 @@ function spec.should_keep_the_world_and_replace_the_code()
 	assert(merged:GetService("Workspace"):FindFirstChild "Floor")
 end
 
+function spec.should_merge_the_starter_player_scripts()
+	local world = place(function(game)
+		local scripts = roblox.Instance.new "StarterPlayerScripts"
+		scripts.Parent = game:GetService "StarterPlayer"
+		add(scripts, "Folder", "Keep")
+		add(scripts, "Folder", "Client")
+	end)
+
+	local code = place(function(game)
+		local scripts = roblox.Instance.new "StarterPlayerScripts"
+		scripts.Parent = game:GetService "StarterPlayer"
+		add(scripts, "Configuration", "Client")
+	end)
+
+	local merged = roblox.deserializePlace(merge.merge(world, code))
+	local scripts = merged:GetService("StarterPlayer"):FindFirstChild "StarterPlayerScripts"
+	assert(scripts)
+
+	local replaced = scripts:FindFirstChild "Client"
+	assert(scripts:FindFirstChild "Keep")
+	assert(replaced and replaced.ClassName == "Configuration")
+end
+
 return spec
