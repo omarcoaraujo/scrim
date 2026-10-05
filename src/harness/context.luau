@@ -131,9 +131,11 @@ const function new(spec_name: string, players: { Player }): handle
 end
 
 --// Listeners
-remotes.ready.on_server(on_ready)
-remotes.answered.on_server(on_answered)
-Players.PlayerRemoving:Connect(on_player_removing)
+if RunService:IsServer() then
+	remotes.ready.on_server(on_ready)
+	remotes.answered.on_server(on_answered)
+	Players.PlayerRemoving:Connect(on_player_removing)
+end
 
 --// End
 return table.freeze {
