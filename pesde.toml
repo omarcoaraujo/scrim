@@ -1,5 +1,5 @@
 name = "omarcoaraujo/scrim"
-version = "0.1.0"
+version = "0.1.1"
 description = "Integration testing for Roblox games, driven by bots"
 license = "MIT"
 authors = ["omarcoaraujo <omarcoaraujo@outlook.com>"]
