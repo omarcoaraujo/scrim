@@ -53,13 +53,13 @@ local function build_place(options: args.options): string?
 
 	local code_path = `{DIRECTORY}/code.rbxl`
 	local build_err = rojo.build(options.project, code_path)
-	
+
 	if build_err then return build_err end
 	local ok, merged = pcall(merge.merge, bytes, fs.readFile(code_path))
 
 	if not ok then return `could not merge the place: {merged}` end
 	fs.writeFile(`{DIRECTORY}/place.rbxl`, merged)
-	
+
 	return nil
 end
 
