@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1
+
+- `ctx.walk(player, position)`: built-in bot walk with pathfinding and a `MoveTo` fallback, no client query needed. The spec still checks the position on the server.
+- Errors logged during a spec are shown in the report.
+- Studio windows open minimized on Windows. `--show` keeps them as they are.
+- The `example/` walk spec uses `ctx.walk`.
+
 ## 0.1.0
 
 First release.

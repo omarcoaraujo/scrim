@@ -45,7 +45,7 @@ return {
 	run = function(ctx)
 		const player = ctx.players[1]
 
-		ctx.ask(player, "walk_to", Vector3.new(0, 3, 50))
+		ctx.walk(player, Vector3.new(0, 3, 50))
 		ctx.eventually("the player reaches the goal", function()
 			return player.Character.PrimaryPart.Position.Z > 45
 		end)
@@ -71,6 +71,7 @@ return {
 |---|---|
 | `ctx.players` | The players of this spec |
 | `ctx.ask(player, query, ...)` | Runs a client query and returns its answer (30s timeout) |
+| `ctx.walk(player, position)` | Built-in: the bot walks to the position with pathfinding, returns whether it arrived. The spec still checks the position on the server |
 | `ctx.eventually(label, predicate, timeout?)` | Polls until the predicate is truthy (10s by default) |
 | `ctx.defer(cleanup)` | Registers a cleanup, run in reverse order even when the spec fails |
 | `ctx.finish()` | Ends the spec early as a pass |
@@ -111,6 +112,7 @@ scrim --place world.rbxl
 | `--runner studio` | Where the session runs. `cloud` is not implemented yet |
 | `--filter <text>` | Runs only the specs whose name contains the text |
 | `--verbose` | Also prints the raw Studio log |
+| `--show` | Leaves the Studio windows as they open. By default they are minimized (Windows) so the bots play in the background |
 
 Downloading a place by id needs `ROBLOX_API_KEY` with the `legacy-asset:manage` scope.
 
