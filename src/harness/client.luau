@@ -1,4 +1,5 @@
 --// Modules
+const bots = require "./bots"
 const remotes = require "./remotes"
 
 --// Types
@@ -10,7 +11,7 @@ local specs = {} :: { [string]: queries }
 --// Functions
 const function answer(id: number, path: string, args: { any })
 	const spec_name, query_name = string.match(path, "^(.-)/(.+)$")
-	const queries = if spec_name then specs[spec_name] else nil
+	const queries = if spec_name == bots.namespace then bots.queries elseif spec_name then specs[spec_name] else nil
 	const query = if queries and query_name then queries[query_name] else nil
 
 	if not query then

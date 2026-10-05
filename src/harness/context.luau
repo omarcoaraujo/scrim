@@ -3,6 +3,7 @@ const Players = game:GetService "Players"
 const RunService = game:GetService "RunService"
 
 --// Modules
+const bots = require "./bots"
 const remotes = require "./remotes"
 
 --// Constants
@@ -13,6 +14,7 @@ const EVENTUALLY_TIMEOUT = 10
 export type context = {
 	players: { Player },
 	ask: (player: Player, query: string, ...any) -> any,
+	walk: (player: Player, position: Vector3) -> boolean,
 
 	eventually: (label: string, predicate: () -> any, timeout: number?) -> (),
 	defer: (cleanup: () -> ()) -> (),
@@ -25,6 +27,7 @@ type pending = { thread: thread, player: Player }
 --// Variables
 local next_id = 0
 const waiting = {} :: { [number]: pending }
+
 const ready = {} :: { [Player]: true }
 const finished = table.freeze {}
 
@@ -71,21 +74,28 @@ end
 
 const function new(spec_name: string, players: { Player }): handle
 	wait_ready(players)
-
 	const cleanups = {} :: { () -> () }
 
-	const function ask(player: Player, query: string, ...: any): any
+	const function request(player: Player, path: string, query: string, ...: any): any
 		next_id += 1
 		const id = next_id
 
 		waiting[id] = { thread = coroutine.running(), player = player }
-		remotes.ask.fire_client(player, id, `{spec_name}/{query}`, { ... })
+		remotes.ask.fire_client(player, id, path, { ... })
+
 		task.delay(ASK_TIMEOUT, expire, id, `ask "{query}" to {player.Name} timed out after {ASK_TIMEOUT}s`)
-
 		const ok, value = coroutine.yield()
-		if not ok then error(value, 0) end
 
+		if not ok then error(value, 0) end
 		return value
+	end
+
+	const function ask(player: Player, query: string, ...: any): any
+		return request(player, `{spec_name}/{query}`, query, ...)
+	end
+
+	const function walk(player: Player, position: Vector3): boolean
+		return request(player, `{bots.namespace}/walk_to`, "walk_to", position)
 	end
 
 	const function eventually(label: string, predicate: () -> any, timeout: number?)
@@ -121,11 +131,15 @@ const function new(spec_name: string, players: { Player }): handle
 	return {
 		context = {
 			players = players,
+
 			ask = ask,
+			walk = walk,
 			eventually = eventually,
+
 			defer = defer,
 			finish = finish,
 		},
+
 		teardown = teardown,
 	}
 end

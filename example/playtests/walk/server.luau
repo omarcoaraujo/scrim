@@ -21,7 +21,7 @@ const function run(ctx: scrim.context)
 	end
 
 	ctx.eventually("the character spawns", has_character)
-	ctx.ask(player, "walk_to", GOAL)
+	ctx.walk(player, GOAL)
 	ctx.eventually("the player reaches the goal", reached_goal)
 end
 
