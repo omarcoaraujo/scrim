@@ -3,6 +3,7 @@ version = "0.1.0"
 description = "Integration testing for Roblox games, driven by bots"
 license = "MIT"
 authors = ["omarcoaraujo <omarcoaraujo@outlook.com>"]
+repository = "https://github.com/omarcoaraujo/scrim"
 includes = ["pesde.toml", "README.md", "LICENSE", "src/**/*"]
 
 [target]

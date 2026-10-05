@@ -3,6 +3,7 @@ version = "0.1.0"
 description = "Runner for scrim: builds the place, launches Studio and reports the result"
 license = "MIT"
 authors = ["omarcoaraujo <omarcoaraujo@outlook.com>"]
+repository = "https://github.com/omarcoaraujo/scrim"
 includes = ["pesde.toml", "lib/**/*", "main.luau"]
 
 [target]
