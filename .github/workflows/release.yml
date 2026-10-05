@@ -27,6 +27,9 @@ jobs:
         env:
           PESDE_AUTH: ${{ secrets.PESDE_AUTH }}
 
+      - name: Install
+        run: pesde install
+
       - name: Publish
         run: pesde publish -y
 
