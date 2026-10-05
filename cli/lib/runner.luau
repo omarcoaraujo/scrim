@@ -16,7 +16,6 @@ export type runner = (group: specs.group, options: args.options) -> string
 
 --// Constants
 local DIRECTORY = "build/scrim"
-local PROJECT = "default.project.json"
 local KEY_VARIABLE = "ROBLOX_API_KEY"
 
 --// Variables
@@ -53,13 +52,14 @@ local function build_place(options: args.options): string?
 	if not bytes then return err end
 
 	local code_path = `{DIRECTORY}/code.rbxl`
-	local build_err = rojo.build(PROJECT, code_path)
+	local build_err = rojo.build(options.project, code_path)
+	
 	if build_err then return build_err end
-
 	local ok, merged = pcall(merge.merge, bytes, fs.readFile(code_path))
-	if not ok then return `could not merge the place: {merged}` end
 
+	if not ok then return `could not merge the place: {merged}` end
 	fs.writeFile(`{DIRECTORY}/place.rbxl`, merged)
+	
 	return nil
 end
 

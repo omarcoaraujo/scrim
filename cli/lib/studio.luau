@@ -37,7 +37,6 @@ local function newest_windows(): string?
 	if not fs.isDir(root) then return nil end
 
 	local found, stamp = nil :: string?, -1
-
 	for _, version in fs.readDir(root) do
 		local path = `{root}/{version}/{WINDOWS_EXECUTABLE}`
 		if not fs.isFile(path) or modified(path) <= stamp then continue end

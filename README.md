@@ -95,7 +95,7 @@ scrim.start {
 }
 ```
 
-Expose the specs and both scripts through a Rojo `default.project.json` at the root. A complete project is in [`example/`](example).
+Expose the specs and both scripts through a Rojo project, `default.project.json` unless you pass `--project`. A complete project is in [`example/`](example).
 
 ### Running
 
@@ -107,6 +107,7 @@ scrim --place world.rbxl
 |---|---|
 | `--specs <dir>` | Folder with the specs, `./playtests` by default |
 | `--place <file or id>` | The world place. A file is used as is, an id is downloaded through Open Cloud |
+| `--project <file>` | The Rojo project with the specs and scripts, `default.project.json` by default |
 | `--runner studio` | Where the session runs. `cloud` is not implemented yet |
 | `--filter <text>` | Runs only the specs whose name contains the text |
 | `--verbose` | Also prints the raw Studio log |

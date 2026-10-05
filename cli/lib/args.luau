@@ -3,6 +3,7 @@ type runner = "studio" | "cloud"
 export type options = {
 	specs: string,
 	place: string?,
+	project: string,
 
 	runner: runner,
 	filter: string?,
@@ -11,7 +12,9 @@ export type options = {
 
 --// Constants
 local DEFAULT_SPECS = "./playtests"
-local VALUE_FLAGS = { specs = true, place = true, runner = true, filter = true }
+local DEFAULT_PROJECT = "default.project.json"
+
+local VALUE_FLAGS = { specs = true, place = true, project = true, runner = true, filter = true }
 local RUNNERS = { studio = true, cloud = true }
 
 --// Functions
@@ -22,7 +25,7 @@ local function split(argument: string): (string?, string?)
 end
 
 local function parse(argv: { string }): (options?, string?)
-	local options = { specs = DEFAULT_SPECS, runner = "studio", verbose = false } :: options
+	local options = { specs = DEFAULT_SPECS, project = DEFAULT_PROJECT, runner = "studio", verbose = false } :: options
 	local values = {} :: { [string]: string }
 	local index = 1
 
@@ -55,6 +58,7 @@ local function parse(argv: { string }): (options?, string?)
 
 	options.specs = values.specs or options.specs
 	options.place = values.place
+	options.project = values.project or options.project
 
 	options.runner = (values.runner or options.runner) :: runner
 	options.filter = values.filter

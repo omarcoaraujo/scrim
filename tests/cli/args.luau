@@ -7,6 +7,7 @@ function spec.should_use_defaults_without_flags()
 
 	assert(options)
 	assert(options.specs == "./playtests")
+	assert(options.project == "default.project.json")
 
 	assert(options.runner == "studio")
 	assert(options.verbose == false)
@@ -14,12 +15,24 @@ function spec.should_use_defaults_without_flags()
 end
 
 function spec.should_read_every_flag()
-	local options =
-		args.parse { "--specs", "tests", "--place", "123", "--runner", "cloud", "--filter", "walk", "--verbose" }
+	local options = args.parse {
+		"--specs",
+		"tests",
+		"--place",
+		"123",
+		"--project",
+		"dev.project.json",
+		"--runner",
+		"cloud",
+		"--filter",
+		"walk",
+		"--verbose",
+	}
 
 	assert(options)
 	assert(options.specs == "tests")
 	assert(options.place == "123")
+	assert(options.project == "dev.project.json")
 
 	assert(options.runner == "cloud")
 	assert(options.filter == "walk")

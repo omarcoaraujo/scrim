@@ -41,6 +41,7 @@ local function group(specs: { spec }): { group }
 		if not entry then
 			local created = { players = spec.players, specs = {} } :: group
 			by_players[spec.players] = created
+			
 			table.insert(groups, created)
 			entry = created
 		end

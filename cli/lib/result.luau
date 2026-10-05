@@ -32,6 +32,7 @@ local function parse(log: string, decode: decode): outcome
 	local summary = {
 		passed = value.passed or 0,
 		failed = value.failed or 0,
+
 		passes = value.passes or {},
 		failures = value.failures or {},
 	}
@@ -50,6 +51,7 @@ local function combine(outcomes: { outcome }): outcome
 		if outcome.summary then
 			summary.passed += outcome.summary.passed
 			summary.failed += outcome.summary.failed
+
 			table.move(outcome.summary.passes, 1, #outcome.summary.passes, #summary.passes + 1, summary.passes)
 			table.move(outcome.summary.failures, 1, #outcome.summary.failures, #summary.failures + 1, summary.failures)
 		end
