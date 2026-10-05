@@ -1,6 +1,7 @@
 name: Check
 on:
   workflow_dispatch:
+  workflow_call:
   push:
   pull_request:
 jobs:
@@ -44,3 +45,38 @@ jobs:
 
       - name: Run the CLI specs
         run: lune run tests/cli
+
+  analyze:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install pesde
+        run: |
+          curl -sL "https://github.com/pesde-pkg/pesde/releases/download/v0.7.4%2Bregistry.0.2.3/pesde-0.7.4-linux-x86_64.zip" -o pesde.zip
+          unzip -q pesde.zip -d "$HOME/.pesde/bin"
+          chmod +x "$HOME/.pesde/bin/pesde"
+          echo "$HOME/.pesde/bin" >> "$GITHUB_PATH"
+
+      - name: Install CLI packages
+        working-directory: cli
+        run: pesde install
+
+      - name: Generate Lune type definitions
+        run: lune setup
+
+      - name: Generate the sourcemap
+        run: rojo sourcemap default.project.json --output sourcemap.json
+
+      - name: Download the Roblox definitions
+        run: curl -sL https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.luau -o globalTypes.d.luau
+
+      - name: Type check
+        run: luau-lsp analyze --definitions=globalTypes.d.luau --sourcemap=sourcemap.json --ignore "**/luau_packages/**" src cli
