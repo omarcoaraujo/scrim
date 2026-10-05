@@ -14,10 +14,26 @@ function spec.should_list_passes_and_failures()
 			failed = 1,
 			passes = { "walk" },
 			failures = { { name = "duel", message = "boom\nat line 3" } },
+			errors = {},
 		},
 	})
 
 	assert(text == "  ✓ walk\n  ✗ duel\n      boom\n      at line 3")
+end
+
+function spec.should_list_the_errors_logged_during_a_spec()
+	local text = plain(report.lines {
+		status = "passed",
+		summary = {
+			passed = 1,
+			failed = 0,
+			passes = { "walk" },
+			failures = {},
+			errors = { { name = "walk", message = "Workspace.Door:4: nil index" } },
+		},
+	})
+
+	assert(text == "  ✓ walk\n  ! walk logged errors\n      Workspace.Door:4: nil index")
 end
 
 function spec.should_show_the_error_of_a_broken_session()
@@ -26,7 +42,7 @@ function spec.should_show_the_error_of_a_broken_session()
 end
 
 function spec.should_summarise_the_total()
-	local summary = { passed = 2, failed = 1, passes = {}, failures = {} }
+	local summary = { passed = 2, failed = 1, passes = {}, failures = {}, errors = {} }
 
 	assert(plain(report.total { status = "failed", summary = summary }) == "✗ 2 passed, 1 failed")
 	assert(plain(report.total { status = "passed", summary = summary }) == "✓ 2 passed, 1 failed")

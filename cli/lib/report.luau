@@ -27,6 +27,11 @@ local function lines(outcome: result.outcome): string
 			table.insert(out, `  {tint.red "✗"} {failure.name}`)
 			table.insert(out, tint.dim(indent(failure.message)))
 		end
+
+		for _, logged in outcome.summary.errors do
+			table.insert(out, `  {tint.yellow "!"} {logged.name} logged errors`)
+			table.insert(out, tint.dim(indent(logged.message)))
+		end
 	end
 
 	if outcome.status == "error" or outcome.status == "missing" then

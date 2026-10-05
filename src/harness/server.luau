@@ -1,4 +1,5 @@
 --// Services
+const LogService = game:GetService "LogService"
 const Players = game:GetService "Players"
 
 --// Modules
@@ -14,6 +15,9 @@ export type options = { specs: Instance, players: number? }
 type test_args = { players: number?, only: { string }? }
 type failure = { name: string, message: string }
 type loaded = { name: string, spec: spec }
+
+--// Variables
+local logged = {} :: { string }
 
 --// Functions
 const function load(folder: Instance): { loaded }
@@ -42,17 +46,23 @@ const function wait_players(count: number)
 	end
 end
 
-const function run_spec(loaded: loaded): (boolean, string?)
+const function record(message: string, kind: Enum.MessageType)
+	if kind ~= Enum.MessageType.MessageError then return end
+	table.insert(logged, message)
+end
+
+const function run_spec(loaded: loaded): (boolean, string?, { string })
 	const players = Players:GetPlayers()
 	const handle = context.new(loaded.name, table.move(players, 1, loaded.spec.players or 1, 1, {}))
+	logged = {}
 
 	const ok, err = pcall(loaded.spec.run :: (context.context) -> any, handle.context)
 	const errors = handle.teardown()
 
-	if not ok and not context.is_finish(err) then return false, tostring(err) end
-	if #errors > 0 then return false, `teardown failed: {table.concat(errors, "; ")}` end
+	if not ok and not context.is_finish(err) then return false, tostring(err), logged end
+	if #errors > 0 then return false, `teardown failed: {table.concat(errors, "; ")}`, logged end
 
-	return true, nil
+	return true, nil, logged
 end
 
 const function finish(result: { [string]: any })
@@ -102,19 +112,25 @@ const function run(options: options)
 
 	const passes = {} :: { string }
 	const failures = {} :: { failure }
+	const errors = {} :: { failure }
 
 	for _, loaded in specs do
-		const ok, message = run_spec(loaded)
+		const ok, message, messages = run_spec(loaded)
 
 		if ok then
 			table.insert(passes, loaded.name)
 		else
 			table.insert(failures, { name = loaded.name, message = message or "failed" })
 		end
+
+		if #messages > 0 then table.insert(errors, { name = loaded.name, message = table.concat(messages, "\n") }) end
 	end
 
-	finish { passed = #passes, failed = #failures, passes = passes, failures = failures }
+	finish { passed = #passes, failed = #failures, passes = passes, failures = failures, errors = errors }
 end
+
+--// Listeners
+LogService.MessageOut:Connect(record)
 
 --// End
 return table.freeze {

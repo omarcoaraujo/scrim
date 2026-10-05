@@ -3,8 +3,20 @@ type status = "passed" | "failed" | "error" | "missing"
 type decode = (string) -> any
 
 export type failure = { name: string, message: string }
-export type summary = { passed: number, failed: number, passes: { string }, failures: { failure } }
-export type outcome = { status: status, summary: summary?, message: string? }
+export type summary = {
+	passed: number,
+	failed: number,
+
+	passes: { string },
+	failures: { failure },
+	errors: { failure },
+}
+
+export type outcome = {
+	status: status,
+	summary: summary?,
+	message: string?,
+}
 
 --// Constants
 local RESULT_PREFIX = "[scrim:result] "
@@ -35,6 +47,7 @@ local function parse(log: string, decode: decode): outcome
 
 		passes = value.passes or {},
 		failures = value.failures or {},
+		errors = value.errors or {},
 	}
 
 	return {
@@ -44,7 +57,7 @@ local function parse(log: string, decode: decode): outcome
 end
 
 local function combine(outcomes: { outcome }): outcome
-	local summary = { passed = 0, failed = 0, passes = {}, failures = {} } :: summary
+	local summary = { passed = 0, failed = 0, passes = {}, failures = {}, errors = {} } :: summary
 	local messages = {} :: { string }
 
 	for _, outcome in outcomes do
@@ -54,6 +67,7 @@ local function combine(outcomes: { outcome }): outcome
 
 			table.move(outcome.summary.passes, 1, #outcome.summary.passes, #summary.passes + 1, summary.passes)
 			table.move(outcome.summary.failures, 1, #outcome.summary.failures, #summary.failures + 1, summary.failures)
+			table.move(outcome.summary.errors, 1, #outcome.summary.errors, #summary.errors + 1, summary.errors)
 		end
 
 		if outcome.status == "error" or outcome.status == "missing" then
