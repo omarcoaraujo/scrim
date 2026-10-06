@@ -71,7 +71,7 @@ return {
 |---|---|
 | `ctx.players` | The players of this spec |
 | `ctx.ask(player, query, ...)` | Runs a client query and returns its answer (30s timeout) |
-| `ctx.walk(player, position)` | Built-in: the bot walks to the position with pathfinding, returns whether it arrived. The spec still checks the position on the server |
+| `ctx.walk(player, position, timeout?)` | Built-in: the bot walks to the position with pathfinding, returns whether it arrived. `timeout` defaults to 60s. The spec still checks the position on the server |
 | `ctx.eventually(label, predicate, timeout?)` | Polls until the predicate is truthy (10s by default) |
 | `ctx.defer(cleanup)` | Registers a cleanup, run in reverse order even when the spec fails |
 | `ctx.finish()` | Ends the spec early as a pass |

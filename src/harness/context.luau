@@ -8,13 +8,14 @@ const remotes = require "./remotes"
 
 --// Constants
 const ASK_TIMEOUT = 30
+const WALK_TIMEOUT = 60
 const EVENTUALLY_TIMEOUT = 10
 
 --// Types
 export type context = {
 	players: { Player },
 	ask: (player: Player, query: string, ...any) -> any,
-	walk: (player: Player, position: Vector3) -> boolean,
+	walk: (player: Player, position: Vector3, timeout: number?) -> boolean,
 
 	eventually: (label: string, predicate: () -> any, timeout: number?) -> (),
 	defer: (cleanup: () -> ()) -> (),
@@ -76,14 +77,14 @@ const function new(spec_name: string, players: { Player }): handle
 	wait_ready(players)
 	const cleanups = {} :: { () -> () }
 
-	const function request(player: Player, path: string, query: string, ...: any): any
+	const function request(player: Player, path: string, query: string, timeout: number, ...: any): any
 		next_id += 1
 		const id = next_id
 
 		waiting[id] = { thread = coroutine.running(), player = player }
 		remotes.ask.fire_client(player, id, path, { ... })
 
-		task.delay(ASK_TIMEOUT, expire, id, `ask "{query}" to {player.Name} timed out after {ASK_TIMEOUT}s`)
+		task.delay(timeout, expire, id, `ask "{query}" to {player.Name} timed out after {timeout}s`)
 		const ok, value = coroutine.yield()
 
 		if not ok then error(value, 0) end
@@ -91,11 +92,11 @@ const function new(spec_name: string, players: { Player }): handle
 	end
 
 	const function ask(player: Player, query: string, ...: any): any
-		return request(player, `{spec_name}/{query}`, query, ...)
+		return request(player, `{spec_name}/{query}`, query, ASK_TIMEOUT, ...)
 	end
 
-	const function walk(player: Player, position: Vector3): boolean
-		return request(player, `{bots.namespace}/walk_to`, "walk_to", position)
+	const function walk(player: Player, position: Vector3, timeout: number?): boolean
+		return request(player, `{bots.namespace}/walk_to`, "walk_to", timeout or WALK_TIMEOUT, position)
 	end
 
 	const function eventually(label: string, predicate: () -> any, timeout: number?)
