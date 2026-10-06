@@ -21,10 +21,12 @@ function spec.should_pass_the_launch_flags()
 	)
 end
 
-function spec.should_run_the_minimizer_script_without_a_profile()
-	local args = studio.minimizer_arguments "C:/game/build/minimize.ps1"
+function spec.should_run_the_minimizer_script_without_a_profile_and_with_the_launch_time()
+	local args = studio.minimizer_arguments("C:/game/build/minimize.ps1", 1700000000000)
 
-	assert(table.concat(args, " ") == "-NoProfile -ExecutionPolicy Bypass -File C:/game/build/minimize.ps1")
+	assert(
+		table.concat(args, " ") == "-NoProfile -ExecutionPolicy Bypass -File C:/game/build/minimize.ps1 1700000000000"
+	)
 end
 
 return spec
