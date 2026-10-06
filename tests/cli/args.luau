@@ -24,7 +24,7 @@ function spec.should_read_every_flag()
 		"--project",
 		"dev.project.json",
 		"--runner",
-		"cloud",
+		"studio",
 		"--filter",
 		"walk",
 		"--verbose",
@@ -35,14 +35,14 @@ function spec.should_read_every_flag()
 	assert(options.place == "123")
 	assert(options.project == "dev.project.json")
 
-	assert(options.runner == "cloud")
+	assert(options.runner == "studio")
 	assert(options.filter == "walk")
 	assert(options.verbose == true)
 end
 
 function spec.should_accept_equals_syntax()
-	local options = args.parse { "--filter=walk", "--runner=cloud" }
-	assert(options and options.filter == "walk" and options.runner == "cloud")
+	local options = args.parse { "--filter=walk", "--runner=studio" }
+	assert(options and options.filter == "walk" and options.runner == "studio")
 end
 
 function spec.should_reject_an_unknown_flag()
@@ -60,7 +60,7 @@ end
 
 function spec.should_reject_a_bad_runner()
 	local options, err = args.parse { "--runner", "docker" }
-	assert(not options and err == '--runner must be studio or cloud, got "docker"')
+	assert(not options and err == '--runner must be studio, got "docker"')
 end
 
 function spec.should_reject_a_positional_argument()

@@ -109,7 +109,7 @@ scrim --place world.rbxl
 | `--specs <dir>` | Folder with the specs, `./playtests` by default |
 | `--place <file or id>` | The world place. A file is used as is, an id is downloaded through Open Cloud |
 | `--project <file>` | The Rojo project with the specs and scripts, `default.project.json` by default |
-| `--runner studio` | Where the session runs. `cloud` is not implemented yet |
+| `--runner studio` | Where the session runs. Only `studio` exists |
 | `--filter <text>` | Runs only the specs whose name contains the text |
 | `--verbose` | Also prints the raw Studio log |
 | `--show` | Leaves the Studio windows as they open. By default they are minimized (Windows) so the bots play in the background |
@@ -121,7 +121,7 @@ The CLI exits 0 only when every spec passed. A missing, unreadable or errored re
 ## Limitations
 
 - Scrim is pre-1.0, so the API can still change between minor versions.
-- Sessions run in Roblox Studio on your machine, which needs to be installed. `--runner cloud` is reserved and not implemented.
+- Sessions run in Roblox Studio on your machine, which needs to be installed.
 - To run it in CI you need a runner with Studio installed, such as a self-hosted one.
 
 ## Contributing

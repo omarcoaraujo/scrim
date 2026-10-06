@@ -90,12 +90,8 @@ local function studio_runner(group: specs.group, options: args.options): string
 	return fs.readFile(output)
 end
 
-local function cloud_runner(group: specs.group, options: args.options): string
-	return failure "cloud runner not implemented yet"
-end
-
 local function get(name: string): runner
-	return if name == "cloud" then cloud_runner else studio_runner
+	return studio_runner
 end
 
 --// End

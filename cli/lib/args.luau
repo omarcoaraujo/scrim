@@ -1,5 +1,5 @@
 --// Types
-type runner = "studio" | "cloud"
+type runner = "studio"
 export type options = {
 	specs: string,
 	place: string?,
@@ -16,7 +16,7 @@ local DEFAULT_SPECS = "./playtests"
 local DEFAULT_PROJECT = "default.project.json"
 
 local VALUE_FLAGS = { specs = true, place = true, project = true, runner = true, filter = true }
-local RUNNERS = { studio = true, cloud = true }
+local RUNNERS = { studio = true }
 
 --// Functions
 local function split(argument: string): (string?, string?)
@@ -63,7 +63,7 @@ local function parse(argv: { string }): (options?, string?)
 	end
 
 	if values.runner and not RUNNERS[values.runner] then
-		return nil, `--runner must be studio or cloud, got "{values.runner}"`
+		return nil, `--runner must be studio, got "{values.runner}"`
 	end
 
 	options.specs = values.specs or options.specs
