@@ -5,4 +5,6 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 const scrim = require(ReplicatedStorage:WaitForChild "scrim")
 
 --// End
-scrim.start {}
+scrim.start {
+	echo = require(ReplicatedStorage:WaitForChild("playtests"):WaitForChild("echo"):WaitForChild "client"),
+}
