@@ -1,0 +1,19 @@
+{
+  "name": "scrim_lib_playtests",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "scrim": { "$path": "../../src" },
+      "playtests": { "$path": "playtests" }
+    },
+    "ServerScriptService": {
+      "run_specs": { "$path": "run_specs.server.luau" }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "start_client": { "$path": "start_client.client.luau" }
+      }
+    }
+  }
+}
