@@ -3,6 +3,7 @@ local suites = {
 	args = require "@self/args",
 	boot = require "@self/boot",
 	cloud = require "@self/cloud",
+	env = require "@self/env",
 	merge = require "@self/merge",
 	specs = require "@self/specs",
 	studio = require "@self/studio",

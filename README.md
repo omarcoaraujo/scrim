@@ -114,7 +114,7 @@ scrim --place world.rbxl
 | `--verbose` | Also prints the raw Studio log |
 | `--show` | Leaves the Studio windows as they open. By default they are minimized (Windows) so the bots play in the background |
 
-Downloading a place by id needs `ROBLOX_API_KEY` with the `legacy-asset:manage` scope.
+Downloading a place by id needs `ROBLOX_API_KEY` with the `legacy-asset:manage` scope. Set it in the environment or in a `.env` file in the folder where you run `scrim`; the environment wins.
 
 The CLI exits 0 only when every spec passed. A missing, unreadable or errored result counts as a failure.
 

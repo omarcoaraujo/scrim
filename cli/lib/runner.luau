@@ -1,11 +1,11 @@
 --// Services
 local fs = require "@lune/fs"
-local process = require "@lune/process"
 
 --// Modules
 local args = require "./args"
 local boot = require "./boot"
 local cloud = require "./cloud"
+local env = require "./env"
 local merge = require "./merge"
 local rojo = require "./rojo"
 local specs = require "./specs"
@@ -38,7 +38,7 @@ local function load_world(place: string?): (string?, string?)
 	local id = tonumber(place)
 	if not id then return nil, `--place must be a file or a place id, got "{place}"` end
 
-	local key = process.env[KEY_VARIABLE]
+	local key = env.get(KEY_VARIABLE)
 	if not key then return nil, `{KEY_VARIABLE} is not set, it needs the legacy-asset:manage scope` end
 
 	local bytes, err = cloud.download(key, id)
