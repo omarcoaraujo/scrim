@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 397 128" width="397" height="128">
+  <title>Scrim</title>
+  <line x1="64" y1="30" x2="64" y2="16" stroke="#0F766E" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="64" cy="12" r="7" fill="#FBBF24"/>
+  <rect x="8" y="58" width="14" height="28" rx="7" fill="#0F766E"/>
+  <rect x="106" y="58" width="14" height="28" rx="7" fill="#0F766E"/>
+  <rect x="18" y="28" width="92" height="84" rx="26" fill="#2DD4BF"/>
+  <rect x="30" y="42" width="68" height="54" rx="18" fill="#111827"/>
+  <rect x="45" y="56" width="12" height="16" rx="6" fill="#FBBF24"/>
+  <rect x="71" y="56" width="12" height="16" rx="6" fill="#FBBF24"/>
+  <path d="M54 83 Q64 90 74 83" fill="none" stroke="#2DD4BF" stroke-width="5" stroke-linecap="round"/>
+  <g transform="translate(0 -14)">
+    <g fill="none" stroke="#14B8A6" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M171.5 68.5 C168 63.5 163 62 157 62 C149 62 142.5 66.5 142.5 72.5 C142.5 79.5 149 81 157 84 C165 87 171.5 88.5 171.5 95.5 C171.5 101.5 166 106 157 106 C150.5 106 145 104 141.5 100"/>
+      <path d="M227.6 68.4 A22 22 0 1 0 227.6 99.6"/>
+      <path d="M249 62 V106 M249 80 A18 18 0 0 1 267 62"/>
+      <path d="M288 62 V106"/>
+      <path d="M311 62 V106 M311 80 A18 18 0 0 1 347 80 V106 M347 80 A18 18 0 0 1 383 80 V106"/>
+    </g>
+    <circle cx="288" cy="41" r="9" fill="#FBBF24"/>
+  </g>
+</svg>

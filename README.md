@@ -1,5 +1,5 @@
 <div align="center">
-  <img width="128" src="https://raw.githubusercontent.com/omarcoaraujo/scrim/main/assets/logo.svg" alt="Scrim"/>
+  <img width="320" src="https://raw.githubusercontent.com/omarcoaraujo/scrim/main/assets/logo-wordmark.svg" alt="Scrim"/>
   <br/><br/>
   <p>Integration testing for Roblox games, driven by bots.</p>
   <a href="https://github.com/omarcoaraujo/scrim/actions/workflows/check.yml"><img src="https://github.com/omarcoaraujo/scrim/actions/workflows/check.yml/badge.svg" alt="Check"/></a>
