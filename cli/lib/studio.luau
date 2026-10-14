@@ -6,20 +6,48 @@ local process = require "@lune/process"
 --// Constants
 local MAC_EXECUTABLE = "/Applications/RobloxStudio.app/Contents/MacOS/RobloxStudio"
 local WINDOWS_EXECUTABLE = "RobloxStudioBeta.exe"
-local MINIMIZER_SCRIPT = [==[
+local WINDOW_TYPE = [==[
+public delegate bool WindowVisitor(IntPtr window, IntPtr state);
+
+[DllImport("user32.dll")] static extern bool EnumWindows(WindowVisitor visitor, IntPtr state);
+[DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+[DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr window);
+[DllImport("user32.dll")] static extern bool ShowWindow(IntPtr window, int command);
+
+const int SW_HIDE = 0;
+public static void HideWindowsOf(uint[] processIds) {
+	EnumWindows(delegate(IntPtr window, IntPtr state) {
+		uint owner;
+		GetWindowThreadProcessId(window, out owner);
+		if (Array.IndexOf(processIds, owner) >= 0 && IsWindowVisible(window)) {
+			ShowWindow(window, SW_HIDE);
+		}
+		return true;
+	}, IntPtr.Zero);
+}
+]==]
+
+local HIDER_SCRIPT = [==[
 param([long]$Since)
-$start = [DateTimeOffset]::FromUnixTimeMilliseconds($Since).LocalDateTime
-Add-Type -Name Window -Namespace Studio -MemberDefinition '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr handle, int command);'
-$minimized = @{}
+
+$launchedAt = [DateTimeOffset]::FromUnixTimeMilliseconds($Since).LocalDateTime
+
+Add-Type -Name Native -Namespace Studio -MemberDefinition @'
+]==] .. WINDOW_TYPE .. [==[
+'@
+
+function Get-StudioProcessIds {
+	$studios = Get-Process RobloxStudioBeta -ErrorAction SilentlyContinue
+	$launched = $studios | Where-Object { $_.StartTime -ge $launchedAt }
+	return [uint32[]]@($launched | ForEach-Object { $_.Id })
+}
+
 while ($true) {
-	foreach ($process in Get-Process RobloxStudioBeta -ErrorAction SilentlyContinue) {
-		if ($process.StartTime -lt $start) { continue }
-		$handle = $process.MainWindowHandle
-		if ($handle -eq [IntPtr]::Zero -or $minimized.ContainsKey($handle)) { continue }
-		[Studio.Window]::ShowWindow($handle, 7) | Out-Null
-		$minimized[$handle] = $true
+	$processIds = Get-StudioProcessIds
+	if ($processIds.Count -gt 0) {
+		[Studio.Native]::HideWindowsOf($processIds)
 	}
-	Start-Sleep -Milliseconds 100
+	Start-Sleep -Milliseconds 20
 }
 ]==]
 
@@ -44,7 +72,7 @@ local function arguments(place: string, boot: string, output: string): { string 
 	}
 end
 
-local function minimizer_arguments(script: string, since: number): { string }
+local function hider_arguments(script: string, since: number): { string }
 	return { "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, tostring(since) }
 end
 
@@ -75,29 +103,25 @@ local function executable(): string?
 	return nil
 end
 
-local function start_minimizer(script: string, since: number): process.ChildProcess?
+local function start_hider(script: string, since: number): process.ChildProcess?
 	if process.os ~= "windows" then return nil end
-
-	fs.writeFile(script, MINIMIZER_SCRIPT)
-
-	return process.create(
-		"powershell.exe",
-		minimizer_arguments(absolute(process.cwd, script), since),
-		{ stdio = "none" }
-	)
+	fs.writeFile(script, HIDER_SCRIPT)
+	return process.create("powershell.exe", hider_arguments(absolute(process.cwd, script), since), { stdio = "none" })
 end
 
-local function launch(place: string, boot: string, output: string, minimizer: string?): string?
+local function launch(place: string, boot: string, output: string, hider: string?): string?
 	local program = executable()
 	if not program then return "Roblox Studio is not installed" end
 
 	local since = datetime.now().unixTimestampMillis
-	local watcher = if minimizer then start_minimizer(minimizer, since) else nil
+	local watcher = if hider then start_hider(hider, since) else nil
+	
 	local cwd = process.cwd
 	local result = process.exec(program, arguments(absolute(cwd, place), absolute(cwd, boot), absolute(cwd, output)))
+	
 	if watcher then watcher:kill() end
-
 	if result.ok then return nil end
+
 	return `Studio exited with code {result.code}: {result.stderr}`
 end
 
@@ -105,6 +129,7 @@ end
 return table.freeze {
 	absolute = absolute,
 	arguments = arguments,
-	minimizer_arguments = minimizer_arguments,
+	
+	hider_arguments = hider_arguments,
 	launch = launch,
 }

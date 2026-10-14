@@ -82,7 +82,7 @@ local function studio_runner(group: specs.group, options: args.options): string
 		`{DIRECTORY}/place.rbxl`,
 		`{DIRECTORY}/boot.luau`,
 		output,
-		if options.show then nil else `{DIRECTORY}/minimize.ps1`
+		if options.show then nil else `{DIRECTORY}/hide.ps1`
 	)
 	if launch_err then return failure(launch_err) end
 
