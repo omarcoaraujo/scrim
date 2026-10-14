@@ -50,4 +50,20 @@ function spec.should_group_largest_first()
 	assert(#groups[3].specs == 2)
 end
 
+function spec.should_read_a_literal_fps()
+	assert(specs.read_fps 'return { name = "fps", fps = 30, run = run }' == 30)
+	assert(specs.read_fps "return { players = 2 }" == nil)
+	assert(specs.read_fps "const fps = ctx.ask(player, 'fps')" == nil)
+end
+
+function spec.should_group_with_the_highest_fps()
+	local all = {
+		{ name = "a", folder = "a", players = 1, fps = 30 },
+		{ name = "b", folder = "b", players = 1, fps = 60 },
+		{ name = "c", folder = "c", players = 1 },
+	}
+
+	assert(specs.group(all)[1].fps == 60)
+end
+
 return spec

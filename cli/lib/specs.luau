@@ -2,10 +2,15 @@
 local fs = require "@lune/fs"
 
 --// Types
-export type spec = { name: string, folder: string, players: number }
-export type group = { players: number, specs: { spec } }
+export type spec = { name: string, folder: string, players: number, fps: number? }
+export type group = { players: number, fps: number?, specs: { spec } }
 
 --// Functions
+local function read_fps(source: string): number?
+	local value = source:match "%f[%w_]fps%s*=%s*(%d+)%s*[,}\r\n]"
+	return if value then tonumber(value) else nil
+end
+
 local function read_players(source: string): (number?, string?)
 	local value = source:match "%f[%w_]players%s*=%s*([^=][^,}\r\n]*)"
 
@@ -47,6 +52,7 @@ local function group(specs: { spec }): { group }
 		end
 
 		table.insert((entry :: group).specs, spec)
+		if spec.fps then (entry :: group).fps = math.max((entry :: group).fps or 0, spec.fps) end
 	end
 
 	table.sort(groups, function(a, b)
@@ -69,7 +75,10 @@ local function discover(root: string, substring: string?): ({ spec }?, string?)
 		local players, err = read_players(source)
 
 		if not players then return nil, `{entry}: {err}` end
-		table.insert(found, { name = read_name(source) or entry, folder = folder, players = players })
+		table.insert(
+			found,
+			{ name = read_name(source) or entry, folder = folder, players = players, fps = read_fps(source) }
+		)
 	end
 
 	if #found == 0 then return nil, `no specs found in {root}` end
@@ -87,6 +96,7 @@ end
 return table.freeze {
 	read_players = read_players,
 	read_name = read_name,
+	read_fps = read_fps,
 
 	filter = filter,
 	group = group,

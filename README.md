@@ -67,6 +67,8 @@ return {
 
 `players` defaults to 1.
 
+`fps` is optional and must be a number literal. Studio renders windows without focus at a quarter of its frame rate cap, so the clients of a hidden session run at 15 fps by default. The CLI sets the Studio frame rate cap to four times the wanted fps for the run (60 without `fps`, 120 for `fps = 30`) and puts the original value back afterwards (Windows only). The session takes the highest `fps` among its specs.
+
 ### Context
 
 | Call | What it does |

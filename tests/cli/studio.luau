@@ -26,4 +26,17 @@ function spec.should_run_the_hider_script_without_a_profile_and_with_the_launch_
 	assert(table.concat(args, " ") == "-NoProfile -ExecutionPolicy Bypass -File C:/game/build/hide.ps1 1700000000000")
 end
 
+function spec.should_raise_the_cap_to_four_times_the_wanted_fps()
+	assert(studio.framerate_cap(30) == 120)
+end
+
+function spec.should_replace_only_the_framerate_cap_setting()
+	local settings = '<int name="Other">5</int>\n<int name="FramerateCap">-1</int>'
+	assert(studio.with_framerate_cap(settings, 120) == '<int name="Other">5</int>\n<int name="FramerateCap">120</int>')
+end
+
+function spec.should_leave_settings_without_a_cap_alone()
+	assert(studio.with_framerate_cap('<int name="Other">5</int>', 120) == nil)
+end
+
 return spec

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- A spec can ask for a frame rate with `fps = 30`, so the clients no longer run at 15 fps while Studio is in the background.
+
 ## 0.1.2
 
 - Studio windows are hidden on Windows, with no taskbar button. `--show` keeps them as they are.

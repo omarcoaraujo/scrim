@@ -9,7 +9,7 @@ const context = require "./context"
 const PLAYERS_TIMEOUT = 60
 
 --// Types
-export type spec = { name: string?, players: number?, run: (ctx: context.context) -> () }
+export type spec = { name: string?, players: number?, fps: number?, run: (ctx: context.context) -> () }
 export type options = { specs: Instance, players: number? }
 
 type test_args = { players: number?, only: { string }? }
