@@ -1,8 +1,10 @@
-# Scrim
-
-Integration testing for Roblox games, driven by bots.
-
-[![Check](https://github.com/omarcoaraujo/scrim/actions/workflows/check.yml/badge.svg)](https://github.com/omarcoaraujo/scrim/actions/workflows/check.yml) [![Release](https://github.com/omarcoaraujo/scrim/actions/workflows/release.yml/badge.svg)](https://github.com/omarcoaraujo/scrim/actions/workflows/release.yml)
+<div align="center">
+  <img width="128" src="https://raw.githubusercontent.com/omarcoaraujo/scrim/main/assets/logo.svg" alt="Scrim"/>
+  <br/><br/>
+  <p>Integration testing for Roblox games, driven by bots.</p>
+  <a href="https://github.com/omarcoaraujo/scrim/actions/workflows/check.yml"><img src="https://github.com/omarcoaraujo/scrim/actions/workflows/check.yml/badge.svg" alt="Check"/></a>
+  <a href="https://github.com/omarcoaraujo/scrim/actions/workflows/release.yml"><img src="https://github.com/omarcoaraujo/scrim/actions/workflows/release.yml/badge.svg" alt="Release"/></a>
+</div>
 
 ---
 

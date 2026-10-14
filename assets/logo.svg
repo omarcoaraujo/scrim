@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <title>Scrim</title>
+  <line x1="64" y1="30" x2="64" y2="16" stroke="#0F766E" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="64" cy="12" r="7" fill="#FBBF24"/>
+  <rect x="8" y="58" width="14" height="28" rx="7" fill="#0F766E"/>
+  <rect x="106" y="58" width="14" height="28" rx="7" fill="#0F766E"/>
+  <rect x="18" y="28" width="92" height="84" rx="26" fill="#2DD4BF"/>
+  <rect x="30" y="42" width="68" height="54" rx="18" fill="#111827"/>
+  <rect x="45" y="56" width="12" height="16" rx="6" fill="#FBBF24"/>
+  <rect x="71" y="56" width="12" height="16" rx="6" fill="#FBBF24"/>
+  <path d="M54 83 Q64 90 74 83" fill="none" stroke="#2DD4BF" stroke-width="5" stroke-linecap="round"/>
+</svg>
