@@ -115,10 +115,10 @@ local function launch(place: string, boot: string, output: string, hider: string
 
 	local since = datetime.now().unixTimestampMillis
 	local watcher = if hider then start_hider(hider, since) else nil
-	
+
 	local cwd = process.cwd
 	local result = process.exec(program, arguments(absolute(cwd, place), absolute(cwd, boot), absolute(cwd, output)))
-	
+
 	if watcher then watcher:kill() end
 	if result.ok then return nil end
 
@@ -129,7 +129,7 @@ end
 return table.freeze {
 	absolute = absolute,
 	arguments = arguments,
-	
+
 	hider_arguments = hider_arguments,
 	launch = launch,
 }
