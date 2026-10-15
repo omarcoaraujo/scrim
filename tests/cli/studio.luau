@@ -21,9 +21,12 @@ function spec.should_pass_the_launch_flags()
 	)
 end
 
-function spec.should_run_the_hider_script_without_a_profile_and_with_the_launch_time()
-	local args = studio.hider_arguments("C:/game/build/hide.ps1", 1700000000000)
-	assert(table.concat(args, " ") == "-NoProfile -ExecutionPolicy Bypass -File C:/game/build/hide.ps1 1700000000000")
+function spec.should_run_the_hider_script_without_a_profile_and_with_the_boot_script()
+	local args = studio.hider_arguments("C:/game/build/hide.ps1", "C:/game/build/boot.luau")
+	assert(
+		table.concat(args, " ")
+			== "-NoProfile -ExecutionPolicy Bypass -File C:/game/build/hide.ps1 C:/game/build/boot.luau"
+	)
 end
 
 function spec.should_raise_the_cap_to_four_times_the_wanted_fps()

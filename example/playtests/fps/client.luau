@@ -16,7 +16,7 @@ const function fps(): number
 	frames = 0
 	const connection = RunService.RenderStepped:Connect(count_frame)
 	task.wait(SAMPLE_SECONDS)
-	
+
 	connection:Disconnect()
 	return frames / SAMPLE_SECONDS
 end

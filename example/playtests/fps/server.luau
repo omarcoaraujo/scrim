@@ -18,7 +18,7 @@ end
 return {
 	name = "fps",
 	players = 1,
-	
+
 	fps = 30,
 	run = run,
 }

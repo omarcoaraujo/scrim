@@ -1,5 +1,4 @@
 --// Services
-local datetime = require "@lune/datetime"
 local fs = require "@lune/fs"
 local process = require "@lune/process"
 
@@ -20,9 +19,26 @@ public delegate bool WindowVisitor(IntPtr window, IntPtr state);
 [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height, uint flags);
 [DllImport("user32.dll", EntryPoint = "GetWindowLongW")] static extern int GetStyle(IntPtr window, int index);
 [DllImport("user32.dll", EntryPoint = "SetWindowLongW")] static extern int SetStyle(IntPtr window, int index, int value);
+[DllImport("kernel32.dll")] static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint processId);
+[DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool Process32FirstW(IntPtr snapshot, ref ProcessEntry entry);
+[DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool Process32NextW(IntPtr snapshot, ref ProcessEntry entry);
+[DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
 
 public struct Rect { public int Left, Top, Right, Bottom; }
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
 
+public struct ProcessEntry {
+	public uint Size, Usage, ProcessId;
+	public IntPtr DefaultHeap;
+	
+	public uint ModuleId, Threads, ParentProcessId;
+	public int PriorityBase;
+	
+	public uint Flags;
+	[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string ExeFile;
+}
+
+const uint TH32CS_SNAPPROCESS = 0x2;
 const int SW_HIDE = 0;
 const int SW_SHOW_NO_ACTIVATE = 4;
 const int GWL_EXSTYLE = -20;
@@ -43,42 +59,72 @@ static void MoveOffScreen(IntPtr window) {
 	ShowWindow(window, SW_HIDE);
 	int style = GetStyle(window, GWL_EXSTYLE);
 	SetStyle(window, GWL_EXSTYLE, (style | WS_EX_TOOLWINDOW) & ~WS_EX_APPWINDOW);
+	
 	SetWindowPos(window, IntPtr.Zero, OFF_SCREEN, OFF_SCREEN, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 	ShowWindow(window, SW_SHOW_NO_ACTIVATE);
 }
 
-public static void HideWindowsOf(uint[] processIds) {
+static List<uint> ProcessTree(uint root) {
+	var parents = new Dictionary<uint, uint>();
+	IntPtr snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	
+	var entry = new ProcessEntry();
+	entry.Size = (uint)Marshal.SizeOf(typeof(ProcessEntry));
+	
+	for (bool more = Process32FirstW(snapshot, ref entry); more; more = Process32NextW(snapshot, ref entry)) {
+		parents[entry.ProcessId] = entry.ParentProcessId;
+	}
+
+	CloseHandle(snapshot);
+	var tree = new List<uint> { root };
+
+	for (int index = 0; index < tree.Count; index++) {
+		foreach (var pair in parents) {
+			if (pair.Value == tree[index] && !tree.Contains(pair.Key)) tree.Add(pair.Key);
+		}
+	}
+
+	return tree;
+}
+
+public static void HideWindowsOfTree(uint root) {
+	List<uint> tree = ProcessTree(root);
 	EnumWindows(delegate(IntPtr window, IntPtr state) {
 		uint owner;
 		GetWindowThreadProcessId(window, out owner);
-		if (Array.IndexOf(processIds, owner) >= 0 && IsWindowVisible(window) && !IsOffScreen(window)) {
+		
+		if (tree.Contains(owner) && IsWindowVisible(window) && !IsOffScreen(window)) {
 			MoveOffScreen(window);
 		}
+
 		return true;
 	}, IntPtr.Zero);
 }
 ]==]
 
 local HIDER_SCRIPT = [==[
-param([long]$Since)
+param([string]$BootScript)
 
-$launchedAt = [DateTimeOffset]::FromUnixTimeMilliseconds($Since).LocalDateTime
-
-Add-Type -Name Native -Namespace Studio -MemberDefinition @'
+Add-Type -Name Native -Namespace Studio -UsingNamespace System.Collections.Generic -MemberDefinition @'
 ]==] .. WINDOW_TYPE .. [==[
 '@
 
-function Get-StudioProcessIds {
-	$studios = Get-Process RobloxStudioBeta -ErrorAction SilentlyContinue
-	$launched = $studios | Where-Object { $_.StartTime -ge $launchedAt }
-	return [uint32[]]@($launched | ForEach-Object { $_.Id })
+function Find-LaunchedStudioId {
+	$studios = Get-CimInstance Win32_Process -Filter "Name = 'RobloxStudioBeta.exe'"
+	$launched = $studios | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($BootScript) }
+	return [uint32]($launched | Select-Object -First 1).ProcessId
 }
 
+$rootId = 0
 while ($true) {
-	$processIds = Get-StudioProcessIds
-	if ($processIds.Count -gt 0) {
-		[Studio.Native]::HideWindowsOf($processIds)
+	if ($rootId -eq 0) {
+		$rootId = Find-LaunchedStudioId
 	}
+
+	if ($rootId -ne 0) {
+		[Studio.Native]::HideWindowsOfTree($rootId)
+	}
+
 	Start-Sleep -Milliseconds 20
 }
 ]==]
@@ -104,8 +150,8 @@ local function arguments(place: string, boot: string, output: string): { string 
 	}
 end
 
-local function hider_arguments(script: string, since: number): { string }
-	return { "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, tostring(since) }
+local function hider_arguments(script: string, boot: string): { string }
+	return { "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, boot }
 end
 
 local function modified(path: string): number
@@ -135,10 +181,10 @@ local function executable(): string?
 	return nil
 end
 
-local function start_hider(script: string, since: number): process.ChildProcess?
+local function start_hider(script: string, boot: string): process.ChildProcess?
 	if process.os ~= "windows" then return nil end
 	fs.writeFile(script, HIDER_SCRIPT)
-	return process.create("powershell.exe", hider_arguments(absolute(process.cwd, script), since), { stdio = "none" })
+	return process.create("powershell.exe", hider_arguments(absolute(process.cwd, script), boot), { stdio = "none" })
 end
 
 local function framerate_cap(fps: number): number
@@ -178,14 +224,14 @@ local function launch(place: string, boot: string, output: string, hider: string
 	local program = executable()
 	if not program then return "Roblox Studio is not installed" end
 
-	local since = datetime.now().unixTimestampMillis
-	local watcher = if hider then start_hider(hider, since) else nil
-	local original_settings = raise_framerate_cap(fps)
-
 	local cwd = process.cwd
-	local result = process.exec(program, arguments(absolute(cwd, place), absolute(cwd, boot), absolute(cwd, output)))
+	local boot_path = absolute(cwd, boot)
+	local watcher = if hider then start_hider(hider, boot_path) else nil
 
+	local original_settings = raise_framerate_cap(fps)
+	local result = process.exec(program, arguments(absolute(cwd, place), boot_path, absolute(cwd, output)))
 	restore_settings(original_settings)
+
 	if watcher then watcher:kill() end
 	if result.ok then return nil end
 
