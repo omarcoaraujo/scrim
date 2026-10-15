@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Opening your own Roblox Studio while scrim runs no longer sends it off screen. Only the windows scrim opened are hidden.
+
 ## 0.1.3
 
 - A spec can ask for a frame rate with `fps = 30`, so the clients no longer run at 15 fps while Studio is in the background.
