@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The server and player Studios a run opens now close when it ends, even after a failure or Ctrl+C, instead of staying open in the background (Windows).
+
 ## 0.1.4
 
 - Opening your own Roblox Studio while scrim runs no longer sends it off screen. Only the windows scrim opened are hidden.

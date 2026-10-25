@@ -82,6 +82,7 @@ local function studio_runner(group: specs.group, options: args.options): string
 		`{DIRECTORY}/place.rbxl`,
 		`{DIRECTORY}/boot.luau`,
 		output,
+		`{DIRECTORY}/reap.ps1`,
 		if options.show then nil else `{DIRECTORY}/hide.ps1`,
 		group.fps
 	)

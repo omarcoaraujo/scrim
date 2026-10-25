@@ -102,18 +102,76 @@ public static void HideWindowsOfTree(uint root) {
 }
 ]==]
 
+local FIND_STUDIO_FUNCTION = [==[
+function Find-LaunchedStudioId {
+	$studios = Get-CimInstance Win32_Process -Filter "Name = 'RobloxStudioBeta.exe'"
+	$launched = $studios | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($BootScript) }
+	return [uint32]($launched | Select-Object -First 1).ProcessId
+}
+]==]
+
+local REAPER_SCRIPT = [==[
+param([string]$BootScript, [string]$PidFile, [uint32]$OwnerId = 0, [uint32]$SweepId = 0, [switch]$Launch)
+
+]==] .. FIND_STUDIO_FUNCTION .. [==[
+
+function Test-Alive([uint32]$Id) {
+	return [bool](Get-Process -Id $Id -ErrorAction SilentlyContinue)
+}
+
+function Stop-SessionStudios([uint32]$RootId) {
+	$all = @(Get-CimInstance Win32_Process)
+	$marker = "-parentPid\s+$RootId(\s|$)"
+	$doomed = [System.Collections.Generic.List[uint32]]::new()
+
+	foreach ($process in $all) {
+		if ($process.Name -eq 'RobloxStudioBeta.exe' -and $process.CommandLine -match $marker) { $doomed.Add($process.ProcessId) }
+	}
+
+	for ($index = 0; $index -lt $doomed.Count; $index++) {
+		foreach ($process in $all) {
+			if ($process.ParentProcessId -eq $doomed[$index] -and -not $doomed.Contains($process.ProcessId)) { $doomed.Add($process.ProcessId) }
+		}
+	}
+
+	foreach ($id in $doomed) { Stop-Process -Id $id -Force -ErrorAction SilentlyContinue }
+}
+
+if ($SweepId -ne 0) {
+	Stop-SessionStudios $SweepId
+	exit
+}
+
+if ($Launch) {
+	$owner = (Get-CimInstance Win32_Process -Filter "ProcessId = $PID").ParentProcessId
+	$arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -BootScript `"$BootScript`" -PidFile `"$PidFile`" -OwnerId $owner"
+	Start-Process powershell.exe -WindowStyle Hidden -ArgumentList $arguments
+	exit
+}
+
+$rootId = 0
+while ($rootId -eq 0) {
+	if (-not (Test-Alive $OwnerId)) { exit }
+	$rootId = Find-LaunchedStudioId
+	Start-Sleep -Milliseconds 100
+}
+
+Set-Content -Path $PidFile -Value $rootId
+while (Test-Alive $rootId) {
+	if (-not (Test-Alive $OwnerId)) { Stop-Process -Id $rootId -Force -ErrorAction SilentlyContinue }
+	Start-Sleep -Milliseconds 250
+}
+
+Stop-SessionStudios $rootId
+]==]
+
 local HIDER_SCRIPT = [==[
 param([string]$BootScript)
 
 Add-Type -Name Native -Namespace Studio -UsingNamespace System.Collections.Generic -MemberDefinition @'
 ]==] .. WINDOW_TYPE .. [==[
 '@
-
-function Find-LaunchedStudioId {
-	$studios = Get-CimInstance Win32_Process -Filter "Name = 'RobloxStudioBeta.exe'"
-	$launched = $studios | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($BootScript) }
-	return [uint32]($launched | Select-Object -First 1).ProcessId
-}
+]==] .. FIND_STUDIO_FUNCTION .. [==[
 
 $rootId = 0
 while ($true) {
@@ -154,6 +212,33 @@ local function hider_arguments(script: string, boot: string): { string }
 	return { "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, boot }
 end
 
+local function reaper_arguments(script: string, boot: string, pid_file: string): { string }
+	return {
+		"-NoProfile",
+		"-ExecutionPolicy",
+		"Bypass",
+		"-File",
+		script,
+		"-Launch",
+		"-BootScript",
+		boot,
+		"-PidFile",
+		pid_file,
+	}
+end
+
+local function sweep_arguments(script: string, root: number): { string }
+	return { "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, "-SweepId", tostring(root) }
+end
+
+local function pid_file(script: string): string
+	return (script:gsub("%.ps1$", "")) .. ".pid"
+end
+
+local function root_id(contents: string): number?
+	return tonumber(contents:match "%d+")
+end
+
 local function modified(path: string): number
 	local date = fs.metadata(path).modifiedAt
 	return if date then date.unixTimestamp else 0
@@ -185,6 +270,31 @@ local function start_hider(script: string, boot: string): process.ChildProcess?
 	if process.os ~= "windows" then return nil end
 	fs.writeFile(script, HIDER_SCRIPT)
 	return process.create("powershell.exe", hider_arguments(absolute(process.cwd, script), boot), { stdio = "none" })
+end
+
+local function start_reaper(script: string, boot: string)
+	if process.os ~= "windows" then return end
+
+	local path = absolute(process.cwd, script)
+	local pids = pid_file(path)
+
+	fs.writeFile(path, REAPER_SCRIPT)
+	if fs.isFile(pids) then fs.removeFile(pids) end
+
+	process.exec("powershell.exe", reaper_arguments(path, boot, pids))
+end
+
+local function sweep(script: string)
+	if process.os ~= "windows" then return end
+
+	local path = absolute(process.cwd, script)
+	local pids = pid_file(path)
+
+	if not fs.isFile(pids) then return end
+	local root = root_id(fs.readFile(pids))
+
+	if not root then return end
+	process.exec("powershell.exe", sweep_arguments(path, root))
 end
 
 local function framerate_cap(fps: number): number
@@ -220,18 +330,28 @@ local function restore_settings(original: string?)
 	if original and path then fs.writeFile(path, original) end
 end
 
-local function launch(place: string, boot: string, output: string, hider: string?, fps: number?): string?
+local function launch(
+	place: string,
+	boot: string,
+	output: string,
+	reaper: string,
+	hider: string?,
+	fps: number?
+): string?
 	local program = executable()
 	if not program then return "Roblox Studio is not installed" end
 
 	local cwd = process.cwd
 	local boot_path = absolute(cwd, boot)
+
+	start_reaper(reaper, boot_path)
 	local watcher = if hider then start_hider(hider, boot_path) else nil
 
 	local original_settings = raise_framerate_cap(fps)
 	local result = process.exec(program, arguments(absolute(cwd, place), boot_path, absolute(cwd, output)))
 	restore_settings(original_settings)
 
+	sweep(reaper)
 	if watcher then watcher:kill() end
 	if result.ok then return nil end
 
@@ -244,6 +364,11 @@ return table.freeze {
 	arguments = arguments,
 
 	hider_arguments = hider_arguments,
+	reaper_arguments = reaper_arguments,
+	sweep_arguments = sweep_arguments,
+
+	pid_file = pid_file,
+	root_id = root_id,
 	framerate_cap = framerate_cap,
 
 	with_framerate_cap = with_framerate_cap,

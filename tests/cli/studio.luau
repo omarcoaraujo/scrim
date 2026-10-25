@@ -29,6 +29,28 @@ function spec.should_run_the_hider_script_without_a_profile_and_with_the_boot_sc
 	)
 end
 
+function spec.should_launch_the_reaper_with_the_boot_script_and_pid_file()
+	local args = studio.reaper_arguments("C:/game/build/reap.ps1", "C:/game/build/boot.luau", "C:/game/build/reap.pid")
+	assert(
+		table.concat(args, " ")
+			== "-NoProfile -ExecutionPolicy Bypass -File C:/game/build/reap.ps1 -Launch -BootScript C:/game/build/boot.luau -PidFile C:/game/build/reap.pid"
+	)
+end
+
+function spec.should_sweep_the_studios_spawned_by_the_launched_one()
+	local args = studio.sweep_arguments("C:/game/build/reap.ps1", 9680)
+	assert(table.concat(args, " ") == "-NoProfile -ExecutionPolicy Bypass -File C:/game/build/reap.ps1 -SweepId 9680")
+end
+
+function spec.should_keep_the_pid_file_next_to_the_reaper()
+	assert(studio.pid_file "C:/game/build/reap.ps1" == "C:/game/build/reap.pid")
+end
+
+function spec.should_read_the_launched_studio_id_from_the_pid_file()
+	assert(studio.root_id "9680\r\n" == 9680)
+	assert(studio.root_id "" == nil)
+end
+
 function spec.should_raise_the_cap_to_four_times_the_wanted_fps()
 	assert(studio.framerate_cap(30) == 120)
 end
