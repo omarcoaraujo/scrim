@@ -75,7 +75,7 @@ local function studio_runner(group: specs.group, options: args.options): string
 	end
 
 	local output = `{DIRECTORY}/output.log`
-	fs.writeFile(`{DIRECTORY}/boot.luau`, boot.render(group.players, names))
+	fs.writeFile(`{DIRECTORY}/boot.luau`, boot.render(group.players, names, group.ping, group.jitter))
 
 	if fs.isFile(output) then fs.removeFile(output) end
 	local launch_err = studio.launch(

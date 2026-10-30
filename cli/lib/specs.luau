@@ -2,13 +2,42 @@
 local fs = require "@lune/fs"
 
 --// Types
-export type spec = { name: string, folder: string, players: number, fps: number? }
-export type group = { players: number, fps: number?, specs: { spec } }
+export type spec = {
+	name: string,
+	folder: string,
+
+	players: number,
+	fps: number?,
+
+	ping: number?,
+	jitter: number?,
+}
+
+export type group = {
+	players: number,
+	fps: number?,
+	ping: number,
+
+	jitter: number,
+	specs: { spec },
+}
 
 --// Functions
-local function read_fps(source: string): number?
-	local value = source:match "%f[%w_]fps%s*=%s*(%d+)%s*[,}\r\n]"
+local function read_number(source: string, key: string): number?
+	local value = source:match(`%f[%w_]{key}%s*=%s*(%d+%.?%d*)%s*[,}\r\n]`)
 	return if value then tonumber(value) else nil
+end
+
+local function read_fps(source: string): number?
+	return read_number(source, "fps")
+end
+
+local function read_ping(source: string): number?
+	return read_number(source, "ping")
+end
+
+local function read_jitter(source: string): number?
+	return read_number(source, "jitter")
 end
 
 local function read_players(source: string): (number?, string?)
@@ -37,16 +66,23 @@ local function filter(specs: { spec }, substring: string?): { spec }
 end
 
 local function group(specs: { spec }): { group }
-	local by_players = {} :: { [number]: group }
+	local by_key = {} :: { [string]: group }
 	local groups = {} :: { group }
 
 	for _, spec in specs do
-		local entry = by_players[spec.players] :: group?
+		local key = `{spec.players}/{spec.ping or 0}/{spec.jitter or 0}`
+		local entry = by_key[key] :: group?
 
 		if not entry then
-			local created = { players = spec.players, specs = {} } :: group
-			by_players[spec.players] = created
+			local created = {
+				players = spec.players,
+				ping = spec.ping or 0,
 
+				jitter = spec.jitter or 0,
+				specs = {},
+			} :: group
+
+			by_key[key] = created
 			table.insert(groups, created)
 			entry = created
 		end
@@ -56,7 +92,9 @@ local function group(specs: { spec }): { group }
 	end
 
 	table.sort(groups, function(a, b)
-		return a.players > b.players
+		if a.players ~= b.players then return a.players > b.players end
+		if a.ping ~= b.ping then return a.ping < b.ping end
+		return a.jitter < b.jitter
 	end)
 
 	return groups
@@ -75,10 +113,15 @@ local function discover(root: string, substring: string?): ({ spec }?, string?)
 		local players, err = read_players(source)
 
 		if not players then return nil, `{entry}: {err}` end
-		table.insert(
-			found,
-			{ name = read_name(source) or entry, folder = folder, players = players, fps = read_fps(source) }
-		)
+		table.insert(found, {
+			name = read_name(source) or entry,
+			folder = folder,
+			players = players,
+
+			fps = read_fps(source),
+			ping = read_ping(source),
+			jitter = read_jitter(source),
+		})
 	end
 
 	if #found == 0 then return nil, `no specs found in {root}` end
@@ -97,6 +140,9 @@ return table.freeze {
 	read_players = read_players,
 	read_name = read_name,
 	read_fps = read_fps,
+	
+	read_ping = read_ping,
+	read_jitter = read_jitter,
 
 	filter = filter,
 	group = group,
