@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- A spec can simulate a slow connection with `ping = 300` and `jitter = 40`, to test how the game behaves for players with high latency.
+- Waits and timeouts inside a spec already allow for the simulated ping, so a slow connection does not fail a spec on its own.
 - The server and player Studios a run opens now close when it ends, even after a failure or Ctrl+C, instead of staying open in the background (Windows).
 
 ## 0.1.4

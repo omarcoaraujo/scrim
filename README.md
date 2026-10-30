@@ -69,6 +69,21 @@ return {
 
 `fps` is optional and must be a number literal. Studio renders windows without focus at a quarter of its frame rate cap, so the clients of a hidden session run at 15 fps by default. The CLI sets the Studio frame rate cap to four times the wanted fps for the run (60 without `fps`, 120 for `fps = 30`) and puts the original value back afterwards (Windows only). The session takes the highest `fps` among its specs.
 
+`ping` and `jitter` are optional, in milliseconds, and must be number literals. `ping = 300` makes the round trip between the server and every client take about 300 ms longer, 150 ms in each direction. `jitter = 40` adds up to 40 ms of random variation to each direction. Use them to cover client prediction and lag compensation under a slow connection.
+
+```lua
+return {
+	name = "shoot_under_lag",
+	players = 2,
+
+	ping = 300,
+	jitter = 40,
+	run = run,
+}
+```
+
+The delay is a Studio setting that cannot be changed from inside a playtest, so it applies to the whole session. Specs with the same `players`, `ping` and `jitter` share a session, and any other combination opens its own. Your own Studio settings are put back when the run ends. The time a query takes is the real round trip plus the added `ping`, so `ctx.ask`, `ctx.walk`, `ctx.eventually` and the wait for players add `ping + 2 × jitter` to their timeouts on their own, and a query made inside `ctx.eventually` does not count against its timeout.
+
 ### Context
 
 | Call | What it does |
