@@ -7,5 +7,6 @@ const scrim = require(ReplicatedStorage:WaitForChild "scrim")
 --// End
 scrim.start {
 	echo = require(ReplicatedStorage:WaitForChild("playtests"):WaitForChild("echo"):WaitForChild "client"),
+	latency = require(ReplicatedStorage:WaitForChild("playtests"):WaitForChild("latency"):WaitForChild "client"),
 	fps = require(ReplicatedStorage:WaitForChild("playtests"):WaitForChild("fps"):WaitForChild "client"),
 }
