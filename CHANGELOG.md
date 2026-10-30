@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.5
 
 - A spec can simulate a slow connection with `ping = 300` and `jitter = 40`, to test how the game behaves for players with high latency.
 - Waits and timeouts inside a spec already allow for the simulated ping, so a slow connection does not fail a spec on its own.
