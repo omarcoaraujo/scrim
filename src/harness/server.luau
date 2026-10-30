@@ -4,15 +4,24 @@ const Players = game:GetService "Players"
 
 --// Modules
 const context = require "./context"
+const latency = require "./latency"
 
 --// Constants
 const PLAYERS_TIMEOUT = 60
 
 --// Types
-export type spec = { name: string?, players: number?, fps: number?, run: (ctx: context.context) -> () }
-export type options = { specs: Instance, players: number? }
+export type spec = {
+	name: string?,
+	players: number?,
+	fps: number?,
 
-type test_args = { players: number?, only: { string }? }
+	ping: number?,
+	jitter: number?,
+	run: (ctx: context.context) -> (),
+}
+
+export type options = { specs: Instance, players: number? }
+type test_args = { players: number?, only: { string }?, ping: number?, jitter: number? }
 type failure = { name: string, message: string }
 type loaded = { name: string, spec: spec }
 
@@ -38,8 +47,8 @@ const function load(folder: Instance): { loaded }
 	return found
 end
 
-const function wait_players(count: number)
-	const deadline = os.clock() + PLAYERS_TIMEOUT
+const function wait_players(count: number, allowance: number)
+	const deadline = os.clock() + PLAYERS_TIMEOUT + allowance
 	while #Players:GetPlayers() < count do
 		assert(os.clock() < deadline, `expected {count} players, got {#Players:GetPlayers()}`)
 		task.wait()
@@ -51,9 +60,9 @@ const function record(message: string, kind: Enum.MessageType)
 	table.insert(logged, message)
 end
 
-const function run_spec(loaded: loaded): (boolean, string?, { string })
+const function run_spec(loaded: loaded, allowance: number): (boolean, string?, { string })
 	const players = Players:GetPlayers()
-	const handle = context.new(loaded.name, table.move(players, 1, loaded.spec.players or 1, 1, {}))
+	const handle = context.new(loaded.name, table.move(players, 1, loaded.spec.players or 1, 1, {}), allowance)
 	logged = {}
 
 	const ok, err = pcall(loaded.spec.run :: (context.context) -> any, handle.context)
@@ -96,6 +105,8 @@ end
 
 const function run(options: options)
 	const args = test_args()
+	const allowance = latency.allowance(args.ping, args.jitter)
+	
 	const group = options.players or args.players
 	const specs = select(load(options.specs), group, args.only)
 	local needed = 0
@@ -104,7 +115,7 @@ const function run(options: options)
 		needed = math.max(needed, loaded.spec.players or 1)
 	end
 
-	const ready, err = pcall(wait_players :: (number) -> any, group or needed)
+	const ready, err = pcall(wait_players :: (number, number) -> any, group or needed, allowance)
 	if not ready then
 		finish { error = tostring(err) }
 		return
@@ -115,7 +126,7 @@ const function run(options: options)
 	const errors = {} :: { failure }
 
 	for _, loaded in specs do
-		const ok, message, messages = run_spec(loaded)
+		const ok, message, messages = run_spec(loaded, allowance)
 
 		if ok then
 			table.insert(passes, loaded.name)

@@ -37,8 +37,8 @@ const function is_finish(value: any)
 	return value == finished
 end
 
-const function wait_ready(players: { Player })
-	const deadline = os.clock() + ASK_TIMEOUT
+const function wait_ready(players: { Player }, allowance: number)
+	const deadline = os.clock() + ASK_TIMEOUT + allowance
 
 	for _, player in players do
 		while not ready[player] do
@@ -73,18 +73,21 @@ const function on_player_removing(player: Player)
 	ready[player] = nil
 end
 
-const function new(spec_name: string, players: { Player }): handle
-	wait_ready(players)
+const function new(spec_name: string, players: { Player }, allowance: number?): handle
+	const slack = allowance or 0
+	wait_ready(players, slack)
 	const cleanups = {} :: { () -> () }
 
 	const function request(player: Player, path: string, query: string, timeout: number, ...: any): any
 		next_id += 1
+
 		const id = next_id
+		const limit = timeout + slack
 
 		waiting[id] = { thread = coroutine.running(), player = player }
 		remotes.ask.fire_client(player, id, path, { ... })
 
-		task.delay(timeout, expire, id, `ask "{query}" to {player.Name} timed out after {timeout}s`)
+		task.delay(limit, expire, id, `ask "{query}" to {player.Name} timed out after {limit}s`)
 		const ok, value = coroutine.yield()
 
 		if not ok then error(value, 0) end
@@ -100,11 +103,21 @@ const function new(spec_name: string, players: { Player }): handle
 	end
 
 	const function eventually(label: string, predicate: () -> any, timeout: number?)
-		const limit = timeout or EVENTUALLY_TIMEOUT
-		const deadline = os.clock() + limit
+		const limit = (timeout or EVENTUALLY_TIMEOUT) + slack
+		const started = os.clock()
+		local evaluating = 0
 
-		while not predicate() do
-			if os.clock() >= deadline then error(`"{label}" did not happen within {limit}s`, 0) end
+		while true do
+			const before = os.clock()
+			const done = predicate()
+
+			if slack > 0 then
+				evaluating += os.clock() - before
+			end
+			
+			if done then return end
+			if os.clock() - started - evaluating >= limit then error(`"{label}" did not happen within {limit}s`, 0) end
+
 			RunService.Heartbeat:Wait()
 		end
 	end
