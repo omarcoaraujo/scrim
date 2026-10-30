@@ -114,7 +114,7 @@ const function new(spec_name: string, players: { Player }, allowance: number?): 
 			if slack > 0 then
 				evaluating += os.clock() - before
 			end
-			
+
 			if done then return end
 			if os.clock() - started - evaluating >= limit then error(`"{label}" did not happen within {limit}s`, 0) end
 

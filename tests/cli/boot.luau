@@ -14,7 +14,7 @@ function spec.should_leave_no_placeholder()
 
 	assert(not script:find("__PLAYERS__", 1, true))
 	assert(not script:find("__ONLY__", 1, true))
-	
+
 	assert(not script:find("__DELAY__", 1, true))
 	assert(not script:find("__JITTER__", 1, true))
 end

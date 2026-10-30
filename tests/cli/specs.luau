@@ -71,7 +71,7 @@ function spec.should_read_a_literal_ping_and_jitter()
 
 	assert(specs.read_ping(source) == 300)
 	assert(specs.read_jitter(source) == 40.5)
-	
+
 	assert(specs.read_ping "return { players = 2 }" == nil)
 	assert(specs.read_ping "const ping = ctx.ask(player, 'ping')" == nil)
 end
@@ -83,12 +83,12 @@ function spec.should_group_by_network_conditions()
 		{ name = "c", folder = "c", players = 1, ping = 300 },
 		{ name = "d", folder = "d", players = 1, ping = 300, jitter = 40 },
 	}
-	
+
 	local groups = specs.group(all)
 
 	assert(#groups == 3)
 	assert(groups[1].ping == 0 and #groups[1].specs == 1)
-	
+
 	assert(groups[2].ping == 300 and groups[2].jitter == 0 and #groups[2].specs == 2)
 	assert(groups[3].jitter == 40)
 end

@@ -106,7 +106,7 @@ end
 const function run(options: options)
 	const args = test_args()
 	const allowance = latency.allowance(args.ping, args.jitter)
-	
+
 	const group = options.players or args.players
 	const specs = select(load(options.specs), group, args.only)
 	local needed = 0

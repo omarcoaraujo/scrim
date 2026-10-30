@@ -140,7 +140,7 @@ return table.freeze {
 	read_players = read_players,
 	read_name = read_name,
 	read_fps = read_fps,
-	
+
 	read_ping = read_ping,
 	read_jitter = read_jitter,
 
